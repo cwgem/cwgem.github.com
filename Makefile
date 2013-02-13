@@ -1,5 +1,5 @@
 ASCIIDOC=asciidoc
-ASCIIDOC_OPTIONS=-a pygments -b xhtml11
+ASCIIDOC_OPTIONS=-a pygments -b xhtml11 --theme volnitsky
 MKDIR_P=mkdir -p
 
 SRCDIR=sources
