@@ -4,7 +4,7 @@ The Personal Site of Chris White (cwgem)
 Introduction
 ~~~~~~~~~~~~
 
-Hello and welcome to my personal site hosted on http://pages.github.com[GitHub pages]. My name is Chris White and I work as a software engineer at http://www.engineyard.com[EngineYard]. I utilize a number of tools to get the job done, including http://www.perl.org[Perl], http://www.python.org[Python], and http://www.ruby-lang.org[Ruby]. Recently I started to look into http://www.erlang.org[Erlang] for API services. When I'm not programming I study Japanese, and hope to live and work there someday. Main main open source project I work with is https://rvm.io[RVM]. Here's where you can find me:
+Hello and welcome to my personal site hosted on http://pages.github.com[GitHub pages]. My name is Chris White and I work as a software engineer at http://www.engineyard.com[EngineYard]. I utilize a number of tools to get the job done, including http://www.perl.org[Perl], http://www.python.org[Python], and http://www.ruby-lang.org[Ruby]. Recently I started to look into http://www.erlang.org[Erlang] for API services. When I'm not programming I study Japanese, and hope to live and work there someday. My main open source project I work with is https://rvm.io[RVM]. Here's where you can find me:
 
 * https://github.com/cwgem[GitHub]
 * https://www.twitter.com/cwgem[Twitter]
