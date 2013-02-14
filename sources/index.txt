@@ -14,4 +14,6 @@ Hello and welcome to my personal site hosted on http://pages.github.com[GitHub p
 Articles
 ~~~~~~~~
 
+* link:/security/talk-on-security-process.html[A Talk On Security Process]
+
 In progress!
