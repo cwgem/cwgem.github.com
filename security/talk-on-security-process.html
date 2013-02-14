@@ -1,0 +1,809 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>A Talk On Security Process</title>
+<style type="text/css">
+/*
+ * AsciiDoc 'volnitsky' theme for xhtml11 and html5 backends.
+ * Based on css from http://volnitsky.com, which was in turn based on default
+ * theme from AsciiDoc
+ *
+ * FIXME: The styling is still a bit rough in places.
+ *
+ */
+
+/* Default font. */
+body {
+  font-family: Georgia,"Times New Roman",Times,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Candara,Arial,sans-serif;
+}
+
+
+#toc a {
+    border-bottom: 1px dotted #999999;
+    color: #3A3A4D !important;
+    text-decoration: none !important;
+}
+#toc a:hover {
+    border-bottom: 1px solid #6D4100;
+    color: #6D4100 !important;
+    text-decoration: none !important;
+}
+a { color: #666688; text-decoration: none; border-bottom: 1px dotted #666688; }
+a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
+a:hover { color: #6D4100; border-bottom: 1px solid #6D4100; }
+
+em {
+  font-style: italic;
+  color: #444466;
+}
+
+strong {
+  font-weight: bold;
+  color: #444466;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #666688;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  letter-spacing:+0.15em;
+}
+
+h1, h2, h3 { border-bottom: 2px solid #ccd; }
+h2 { padding-top: 0.5em; }
+h3 { float: left; }
+h3 + * { clear: left; }
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid #444466;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+#author {
+  color: #444466;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+div.admonitionblock {
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #444466;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock {
+  padding-left: 2.0em;
+  margin-right: 10%;
+}
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock {
+  padding-left: 2.0em;
+  margin-right: 10%;
+}
+div.verseblock > pre.content {
+  font-family: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #444466;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 2px solid silver;
+}
+
+div.exampleblock > div.content {
+  border-left: 2px solid silver;
+  padding: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: #444466;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+div.tableblock > table {
+  border: 3px solid #444466;
+}
+thead {
+  font-weight: bold;
+  color: #444466;
+}
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: #444466;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toctitle {
+  color: #666688;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 { margin-top: 0; margin-bottom: 0; }
+div.toclevel1 { margin-top: 0.3em; margin-left: 0; font-size: 1.0em; }
+div.toclevel2 { margin-top: 0.25em; margin-left: 2em; font-size: 0.9em; }
+div.toclevel3 { margin-left: 4em; font-size: 0.8em; }
+div.toclevel4 { margin-left: 6em; font-size: 0.8em; }
+
+body {
+  margin: 1em 5%;
+  max-width:  55em;
+  padding-left: 0;
+
+}
+
+.monospaced, tt, div.listingblock > div.content {
+  font-family:  Consolas, "Andale Mono", "Courier New", monospace;
+  color: #004400;
+  background: #f4f4f4;
+  max-width: 80em;
+  line-height: 1.2em;
+}
+
+.paragraph p  {
+  line-height: 1.5em;
+  margin-top: 1em;
+}
+
+.paragraph p, li, dd, .content { max-width: 45em; }
+.admonitionblock               { max-width: 35em; }
+
+div.sectionbody div.ulist > ul > li {
+  list-style-type: square;
+  color: #aaa;
+}
+  div.sectionbody div.ulist >  ul > li > * {
+    color: black;
+    /*font-size: 50%;*/
+  }
+
+
+div.sectionbody div.ulist > ul > li div.ulist > ul > li {
+  color: #ccd ;
+}
+  div.sectionbody div.ulist > ul > li div.ulist > ul > li > * {
+    color: black ;
+  }
+
+em {
+  font-style: normal ! important;
+  font-weight: bold ! important;
+  color: #662222   ! important;
+  letter-spacing:+0.08em ! important;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #666688;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #444466;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #444466;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+
+/*
+  pygmentize filter
+*/
+.highlight .hll { background-color: #ffffcc }
+.highlight  { background: #f4f4f4; }
+.highlight .c { color: #008800; font-style: italic } /* Comment */
+.highlight .err { border: 1px solid #FF0000 } /* Error */
+.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
+.highlight .o { color: #666666 } /* Operator */
+.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #008800 } /* Comment.Preproc */
+.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
+.highlight .gd { color: #A00000 } /* Generic.Deleted */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .gr { color: #FF0000 } /* Generic.Error */
+.highlight .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.highlight .gi { color: #00A000 } /* Generic.Inserted */
+.highlight .go { color: #808080 } /* Generic.Output */
+.highlight .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.highlight .gt { color: #0040D0 } /* Generic.Traceback */
+.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
+.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
+.highlight .m { color: #666666 } /* Literal.Number */
+.highlight .s { color: #BB4444 } /* Literal.String */
+.highlight .na { color: #BB4444 } /* Name.Attribute */
+.highlight .nb { color: #AA22FF } /* Name.Builtin */
+.highlight .nc { color: #0000FF } /* Name.Class */
+.highlight .no { color: #880000 } /* Name.Constant */
+.highlight .nd { color: #AA22FF } /* Name.Decorator */
+.highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.highlight .nf { color: #00A000 } /* Name.Function */
+.highlight .nl { color: #A0A000 } /* Name.Label */
+.highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.highlight .nv { color: #B8860B } /* Name.Variable */
+.highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mf { color: #666666 } /* Literal.Number.Float */
+.highlight .mh { color: #666666 } /* Literal.Number.Hex */
+.highlight .mi { color: #666666 } /* Literal.Number.Integer */
+.highlight .mo { color: #666666 } /* Literal.Number.Oct */
+.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
+.highlight .sc { color: #BB4444 } /* Literal.String.Char */
+.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
+.highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
+.highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.highlight .sx { color: #008000 } /* Literal.String.Other */
+.highlight .sr { color: #BB6688 } /* Literal.String.Regex */
+.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
+.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
+.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #B8860B } /* Name.Variable.Class */
+.highlight .vg { color: #B8860B } /* Name.Variable.Global */
+.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
+.highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
+
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install();
+/*]]>*/
+</script>
+</head>
+<body class="article">
+<div id="header">
+<h1>A Talk On Security Process</h1>
+<span id="author">Chris White&lt;cwprogram@live.com&gt;</span><br />
+<span id="revnumber">version 1.0,</span>
+<span id="revdate">Wed Feb 13 18</span>
+<br /><span id="revremark">48:34 PST 2013</span>
+</div>
+<div id="content">
+<div class="sect2">
+<h3 id="_disclaimer">Disclaimer</h3>
+<div class="paragraph"><p>I work for EngineYard, a company that&#8217;s primary target is Rails hosting. Putting Rails in a good light is in the interest of the company I work for, so there might be understandable suspicion of bias. I hope that you, the reader, will read everything and make a critical judgement based on the facts I will present. The reason why I&#8217;m using Rails as a topic of discussion is how recent it is, and the fact that misconceptions have the chance to give people a false sense of security.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_what_8217_s_up_with_these_rails_vulns">What&#8217;s Up With These Rails Vulns?</h3>
+<div class="paragraph"><p>Recently Ruby On Rails have addressed a number of security vulnerabilities that can be viewed on their <a href="https://groups.google.com/forum/?fromgroups=#!forum/rubyonrails-security">security mailing list</a>. Unfortunately the frequency of the issues addressed caused some understood reactions. People were starting to consider if <a href="http://news.ycombinator.com/item?id=5203886">rails was viable due to all this</a>. There&#8217;s even a <a href="http://www.didrailshaveamajorsecurityflawtoday.com">page dedicated to whether or not Rails has a security flaw</a>. So is Rails now a pile of security vulnerabilities that can no longer see the light of day in production? Quite the opposite I believe. To make the point I&#8217;m going to give a little introduction to how the security world works that you probably don&#8217;t get to see that often.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_inside_security">Inside Security</h3>
+<div class="sect3">
+<h4 id="_responsible_disclosure">Responsible Disclosure</h4>
+<div class="paragraph"><p>In talking about security vulnerabilities there are three main methods: Responsible Disclosure, Full Disclosure, and No Disclosure. <a href="https://help.github.com/articles/responsible-disclosure-of-security-vulnerabilities">GitHub&#8217;s security policy</a> is an example of responsible disclosure. This means that you keep any information about the vulnerability to yourself, especially proof of concept code exploits, and channel your communications to the vendor in question. By doing this attackers have to work more to exploit the system, and can&#8217;t simply drop the code onto their system and exploit the vulnerability right away. However, there are some cases where proof of concept exploit is released after the fact. The usual case for this is that the vendor has had a reasonable amount of time to patch and notify their customers. Whether or not this is effective will depend on the process the vendor has in place. In fact, the lack of a good process will lead you to the next type of disclosure, Full Disclosure.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_full_disclosure">Full Disclosure</h4>
+<div class="paragraph"><p>Full Disclosure is where the entire details of an exploit, including proof of concept code, are released to the general public. Now the clock is ticking, and it will often force vendors to stop what they&#8217;re doing to address the issue. I know the feeling of this because I&#8217;ve had to deal with it especially during the <a href="http://news.ycombinator.com/item?id=5139583">rubygems.org compromise</a>. However, in some cases it&#8217;s the only way to get vulnerabilities addressed by the vendor. In fact this is such an issue that there&#8217;s a <a href="http://seclists.org/fulldisclosure/">dedicated mailing list</a> for the sole purpose of putting these security issues face and center. The effectiveness of this system depends on if the person with the knowledge of the exploit chooses to release the information. This leads to the worst possible case, No Disclosure.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_no_disclosure">No Disclosure</h4>
+<div class="paragraph"><p>Someone is sitting on an exploit and doesn&#8217;t tell anyone. Instead they use it to gain access to systems, with the admins in most cases completely unaware of the issue at hand. These are often referred to as <a href="http://en.wikipedia.org/wiki/Zero-day_attack">zero day</a> (or lovingly called by the security community 0day) attacks. In many cases it&#8217;s about money. Take for example right after a Java security update was released, someone posted on 0day forums offering a 0day exploit to the tune of <a href="http://krebsonsecurity.com/2013/01/new-java-exploit-fetches-5000-per-buyer/">$5000 to 2 buyers</a>. Some companies such as PacketStorm look to battle this by <a href="http://packetstormsecurity.com/bugbounty/">offering bounties for exploits to be released in a responsible manner</a>. Whether or not the person holding the exploit goes to the right person is an impossible question to answer.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_which_method_works">Which Method Works?</h4>
+<div class="paragraph"><p>First I <strong>highly</strong> recommend reading this article by security expert Bruce Schneier on <a href="http://www.schneier.com/blog/archives/2007/01/debating_full_d.html">security disclosure</a>. In fact when you&#8217;re done read as much of the articles he posts as possible, as he&#8217;s an export source on security.</p></div>
+<div class="paragraph"><p>No Disclosure is obviously the worst case scenario, and I&#8217;m fairly certain anyone would take Full Disclosure over that. Personally I support Responsible Disclosure to a point. Here&#8217;s a <a href="http://seclists.org/fulldisclosure/2012/Jan/31">good example of responsible disclosure</a>:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Revision History:
+12/23/11 - Vulnerability disclosed
+12/23/11 - Patch released by vendor
+1/03/12 - Advisory published</code></pre>
+</div></div>
+<div class="paragraph"><p>The vendor was notified and fixed the issue the very same day. After a few days the discoverer of the exploit released details, but within a suitable time period to allow vendor notification. Now for the <a href="http://seclists.org/fulldisclosure/2012/Jan/180">bad example</a>:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>2011-04-01 - Vulnerability reported to vendor
+2012-01-12 - 0Day advisory released in accordance with the ZDI 180 day
+             deadline policy</code></pre>
+</div></div>
+<div class="paragraph"><p>That&#8217;s right, <strong>180 days</strong> had passed before the discoverer gave up and put out the exploit details. In this case Full Disclosure is justified. Someone could be sitting on that exploit, utilizing it for no good. All of this is happening while you have the false sense that everything is okay. This, in point, is why the as soon as possible releases security releases of Rails, even in a constant stream, is a good thing. The community response to the exploits have also been very positive. The Dutch government for example <a href="http://www.zdnet.com/dutch-govt-pulls-ruby-on-rails-exploits-become-semi-automated-7000009691/">pulled their site offline to upgrade</a> when they realized they were vulnerable (which they knew because it got put front and center!). This is a drastic measure, but in my opinion the site going down with a security explanation is the best possible thing you can do for your users. Twitter and various blogs were also hot on getting people to upgrade. The whole event got people starting to talk more about security. This is <strong>always</strong> a good thing.</p></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_so_what_do_i_do">So What Do I Do?</h3>
+<div class="paragraph"><p><strong>Educate Yourself</strong></p></div>
+<div class="paragraph"><p><strong>Educate Yourself</strong></p></div>
+<div class="paragraph"><p><strong>Educate Yourself</strong></p></div>
+<div class="paragraph"><p>Security is constantly evolving, and education is critical to keeping up with it. Even if after all I wrote you still don&#8217;t think Rails is going to work, thinking that moving away from it will solve all your problems is the worst thing you could possibly do. Rails is only a small piece of the puzzle. There&#8217;s the gems, the ruby interpreter, the various system libraries, the operating system, the network, etc. Here are some recommendations on ways to increase your security fighting chance:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+If you&#8217;re a company, consider either having a dedicated security staff or hiring a security agency to evaluate your security. Also consider having security talks at regular intervals. Every week, every two weeks, just enough to keep it in as an important topic.
+</p>
+</li>
+<li>
+<p>
+Look around security mailing lists. You don&#8217;t have to be watching them like a hawk, but check out what&#8217;s being exploited and why it&#8217;s happening. Consider if your own software might be susceptible to such attacks.
+</p>
+</li>
+<li>
+<p>
+Have a dedicated security page. Let people know how to contact you with security issues. Full Disclosure often occurs because the vendor doesn&#8217;t have an easy to reach security liaison, and the reporter just gives up. Make sure you are very responsive to it as well! Even if it may take more than a day, talk it out with the reporter and see if you can&#8217;t reach an agreement. Most reporters just want to know that you care. Also don&#8217;t be afraid to ask for help! Finally <strong>NEVER EVER BE RUDE TO SOMEONE REPORTING A SECURITY ISSUE</strong>. Be thankful to them, because having someone in the security community on your bad side is <strong>NEVER</strong> a good thing.
+</p>
+</li>
+<li>
+<p>
+Consider general protection solutions. A good example of this is <a href="http://grsecurity.net">Grsecurity</a> (DISCLAIMER: my coworker is involved in this project) which offers protections against common exploit methods such as buffer overflows and information leaking on the OS level.
+</p>
+</li>
+<li>
+<p>
+Look into testing your system against known exploits. The <a href="https://github.com/rapid7/metasploit-framework">metasploit framework</a> (written in Ruby!) is a good open source collection of exploits for this purpose. When used internally, it can help locate potential attack vectors so you can address them as soon as possible.
+</p>
+</li>
+<li>
+<p>
+Even with all this in place you can still get exploited. If this happens, be as transparent about the process as possible. Tell people as soon as you have information, even if it&#8217;s something as simple as "someone has obtained unauthorized access to our systems and we&#8217;ll fill you in with more details as we have them." Once you&#8217;ve sorted what happened, explain why it happened and what you are going to do to fix it. Otherwise people won&#8217;t trust you in the worst way possible, and you&#8217;ll end up losing a lot of users.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>And finally: <strong>Educate Yourself</strong></p></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Version 1.0<br />
+Last updated 2013-02-13 19:06:05 PST
+</div>
+</div>
+</body>
+</html>
