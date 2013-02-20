@@ -1,0 +1,184 @@
+Git Rebase Fixing
+=================
+Chris White<cwhite@engineyard.com>
+v1.0, Tue Feb 19 PST 2013
+
+link:/[Home]
+
+Introduction
+~~~~~~~~~~~~
+
+`git rebase` happens to be one of those features that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with an may become quite irritated. However, rebasing can provide a quick an easy way to adjust commits to be less messy before committing. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the https://github.com/wayneeseguin/rvm[main RVM repository]. 
+
+Woops...
+~~~~~~~~
+
+So right now there's a fix I made for a bug in RVM that I'm about to put in a pull request for. So now I'll fake a mistake and commit it:
+
+[source,console]
+----
+$ vim scripts/cli 
+$ git add scripts/cli 
+$ git commit -m "This is a mistake"
+[ruby-reinstall 618f439] This is a mistake
+$ git push origin ruby-reinstall
+Counting objects: 7, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 364 bytes, done.
+Total 4 (delta 3), reused 0 (delta 0)
+To git@github.com:cwgem/rvm.git
+   4994dd5..618f439  ruby-reinstall -> ruby-reinstall
+----
+
+Oh no now it's live! While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Things aren't going too well! Fortunately this can be fixed.
+
+Git Magic
+~~~~~~~~~
+
+First off we'll revert the mistake:
+
+[source,console]
+----
+$ git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
+[ruby-reinstall 67b8cf6] Revert "This is a mistake"
+ 1 file changed, 1 insertion(+)
+----
+
+But now looking at the logs:
+
+[source,text]
+----
+$ git log
+commit 67b8cf6de9fc6b7cb53c793f6826fee3a203a2fc
+Author: Chris White <cwhite@engineyard.com>
+Date:   Tue Feb 19 20:55:05 2013 -0800
+
+    Revert "This is a mistake"
+    
+    This reverts commit 618f4398bfeea938a1b9878b9fcf419b94d85e6c.
+
+commit 618f4398bfeea938a1b9878b9fcf419b94d85e6c
+Author: Chris White <cwhite@engineyard.com>
+Date:   Tue Feb 19 20:09:29 2013 -0800
+
+    This is a mistake
+
+commit 4994dd5b0a8c483a44e22ce554e09da5eb14ae5e
+Author: Chris White <cwhite@engineyard.com>
+Date:   Tue Feb 19 19:54:54 2013 -0800
+
+    Fixed rvm reinstall/remove ruby not working properly
+----
+
+What a mess! That's where `git rebase` comes in handy. We'll enter what's called interactive mode which uses `$EDITOR` to handle our history adjustments:
+
+[source,console]
+$ git rebase -i HEAD~3 # work with all commits starting from 3 commits up to HEAD
+
+[source,text]
+----
+pick 4994dd5 Fixed rvm reinstall/remove ruby not working properly
+pick 618f439 This is a mistake
+pick 67b8cf6 Revert "This is a mistake"
+
+# Rebase 39d46f9..67b8cf6 onto 39d46f9
+#
+# Commands:
+#  p, pick = use commit
+#  r, reword = use commit, but edit the commit message
+#  e, edit = use commit, but stop for amending
+#  s, squash = use commit, but meld into previous commit
+#  f, fixup = like "squash", but discard this commit's log message
+#  x, exec = run command (the rest of the line) using shell
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+# However, if you remove everything, the rebase will be aborted.
+#
+# Note that empty commits are commented out
+----
+
+There's also some nice help text that gets displayed along with it. So first order of business is to combine all these commits into one. This is one with the fixup command, which takes the previous commit and combines it into one while disregarding commit messages:
+
+[source,text]
+----
+pick 4994dd5 Fixed rvm reinstall/remove ruby not working properly
+fixup 618f439 This is a mistake
+fixup 67b8cf6 Revert "This is a mistake"
+----
+
+Now the commit message that we want is flagged as reword, so we can adjust the message:
+
+[source,text]
+----
+reword 4994dd5 Fixed rvm reinstall/remove ruby not working properly
+fixup 618f439 This is a mistake
+fixup 67b8cf6 Revert "This is a mistake"
+----
+
+Now to save the file which lets us reword the commit properly:
+
+[source,text]
+----
+Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# Not currently on any branch.
+# You are currently editing a commit during a rebase.
+#
+# Changes to be committed:
+#   (use "git reset HEAD^1 <file>..." to unstage)
+#
+#       modified:   scripts/cli
+#
+----
+
+Now this becomes the final commit message:
+
+[source,console]
+----
+$ git rebase -i HEAD~3
+[detached HEAD b3d43f3] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+[detached HEAD 0473035] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+Successfully rebased and updated refs/heads/ruby-reinstall.
+----
+
+Just to be safe, verify with git log:
+
+[source,text]
+----
+$ git log
+commit 04730359a0c59c1240a8535658562aec8dcbb61a
+Author: Chris White <cwhite@engineyard.com>
+Date:   Tue Feb 19 19:54:54 2013 -0800
+
+    Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+
+commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
+----
+
+That's it, now all that's left is a single commit with a fixed commit message all in one fatal swoop. Now this is once again a fork that only I really work with, so I can make the call to force a remote push:
+
+[NOTE]
+As the remote server will question your edits, `--force` *must* be used
+
+[source,console]
+----
+$ git push origin ruby-reinstall --force
+Counting objects: 7, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (4/4), 491 bytes, done.
+Total 4 (delta 3), reused 1 (delta 1)
+To git@github.com:cwgem/rvm.git
+ + 618f439...0473035 ruby-reinstall -> ruby-reinstall (forced update)
+----
+
+This effectively overwrites the remote repository's history as well, merging the commits so that everything looks clean when the pull request is done. That's the power of rebase! However it's still important to keep in mind:
+
+WARNING: Do *NOT* do this when it's a remote repository where other people are actively committing/cloning! I would not do this to the main RVM repository!
