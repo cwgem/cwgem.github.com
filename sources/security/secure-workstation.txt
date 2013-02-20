@@ -1,0 +1,202 @@
+The Secure Workstation
+======================
+Chris White<cwhite@engineyard.com>
+v1.0, Tue Feb 19 PST 2013
+
+link:/[Home]
+
+Introduction
+~~~~~~~~~~~~
+
+For many companies the fear of a security breach can put great stress on those involved. With the recent http://www.facebook.com/notes/facebook-security/protecting-people-on-facebook/10151249208250766[Facebook breach due to employee laptops being compromised], a plan came to mind on how to create a fairly secure workstation. Having some experience working on https://github.com/cwgem/catalyst-support[Grsecurity backed EC2 images], I began the task of working on such a system.
+
+Distribution
+~~~~~~~~~~~~
+
+I chose Gentoo for my distribution of choice, primarily due to familiarity,and also due to the fact that the http://www.gentoo.org/proj/en/hardened/[Hardened Gentoo Project] puts a considerable amount of effort in supporting the security components of interest. For example, there is the hardened toolchain, which introduces technologies such as http://www.research.ibm.com/trl/projects/security/ssp/[stack smashing protector] and http://linuxfromscratch.xtra-net.org/hlfs/view/unstable/glibc-2.4/chapter02/pie.html[position independent code]. This helps with exploits that utilize buffer overflows or assumed memory addresses.
+
+However one caveat is that to gain the full benefit of the hardened toolchain, compiling becomes even more necessary than a standard Gentoo install. That means staying away from binaries of libreoffice, firefox, chromium, etc. In order to get around this, standardize hardware along with something close to the https://github.com/cwgem/catalyst-support[Gentoo catalyst build scripts] developed can serve as a binary package server to workstatons. This allows for secure, standard binaries customized to business needs and reducing the amount of IT support necessary.
+
+Since the hardened desktop profiles in Gentoo where deprecated, a custom profile was developed which merged the KDE desktop profile and the hardened profile. They were placed in a `/usr/local/portage` overlay with the following structure:
+
+[source,text]
+----
+orchard portage # tree
+.
+└── profiles
+    ├── hardened-desktop
+    │   └── parent
+    └── repo_name
+----
+
+where `repo_name` is simply a text file with the name of the repository, `hardened-custom`. The parent file is a list of profiles to inherit from, relative to the directory where the file exists. In this case it contains:
+
+[source,text]
+----
+../../../../portage/profiles/targets/desktop/kde
+../../../../portage/profiles/hardened/linux/amd64
+----
+
+This easily combines the two profiles giving the benefits of the hardened toolchain, with the requirements for having a suitable KDE desktop. Finally the stable keyword branch of Gentoo was utilized to remain as solid as possible. The main exception to that was using a non-stable marked kernel and a few other required packages to be as up to date as possible and keep in line with the latest Grsecurity patches.
+
+Kernel
+~~~~~~
+
+The kernel used is  hardened-sources-3.7.8, which includes the http://grsecurity.net/[Grsecurity patchset], as well as a few other security related patchsets. The importance of utilizing this patchset can be addressed by this quote from the project website:
+
+[quote]
+____
+Unlike other expensive security "solutions" that pretend to achieve security through known-vulnerability patching, signature-based detection, or other reactive methods, grsecurity provides real proactive security. The only solution that hardens both your applications and operating system, Grsecurity is essential for public-facing servers and shared-hosting environments.
+____
+
+While keeping the system up to date is important, it's often hard to keep up with complete accuracy. Grsecurity comes in by providing protection against common attack vectors that most exploits utilize. Configuring Grsecurity in the kernel is incredibly easy, and can be achieved by simply using auto configuration and setting to Desktop accordingly:
+
+image::/images/grescurity-setup.png[Grsecurity Setup]
+
+Here performance was emphasized as the workstation is often utilized for compile work, and as such becomes an important factor. The file system settings are also important, in this case using ext4. It's okay to go with another file system instead, but it's recommend to enable extended attributes:
+
+image::/images/ext4-setup.png[Extended attributes enabled in ext4]
+
+This allows for adjusting PaX headers on binaries like Skype, which don't deal well with binary tampering.
+
+Notable Software
+~~~~~~~~~~~~~~~~
+
+The List
+^^^^^^^^
+
+Working at EngineYard I use a number of tools to help with various tasks. Of importance to this project was the following list of software:
+
+* Amarok - Show that something "fun" still works in a hardened environment.
+* KDE - Just a personal preference, so pick whatever suits your needs.
+* Chromium - A browser with a solid security model. Also lets passwords be stored using the system keychain (in this case KWallet). No Java, Flash, or PDF plugins will be utilized.
+* Thunderbird - Handle interaction with email. As a bonus it also has great support for https://support.mozillamessaging.com/en-US/kb/digitally-signing-and-encrypting-messages[digital signatures] and http://kb.mozillazine.org/Getting_an_SMIME_certificate[email certificates]. 
+* LibreOffice - Provides basic office suite functionality.
+* Skype - Being a company with remote users, this is often used to setup business meetings.
+* Google Talk - For the times when a regular phone call is necessary.
+* DropBox - Synchronize files with iPad and other devices.
+* Irssi - Connect to IRC there is company work based around open source software, which general communicates with IRC.
+
+Caveats
+^^^^^^^
+
+Skype
++++++
+
+Skype has a binary tampering system which prevents flagging some security protections off so it works properly. While this is rather unfortunate Skype is an essential business tool. With that in mind it takes a few steps to get it running:
+
+[source,console]
+----
+# mkdir -p /etc/portage/package.unmask
+# mkdir -p /etc/portage/package.license
+# echo '=net-im/skype-4.1.0.20' >> /etc/portage/package.keywords/skype
+# echo '=net-im/skype-4.1.0.20 skype-4.0.0.7-copyright' >> /etc/portage/package.license/skype
+# emerge skype
+# paxctl -c /opt/bin/skype
+# paxctl -m /opt/bin/skype # disable MPROTECT so it actually runs
+----
+
+After this and some headset setup Skype worked without a hitch and showed no issues during two group meetings.
+
+DropBox
++++++++
+
+Same here with needing to disable protections. This was achieved through doing:
+
+[source,console]
+----
+# emerge dropbox
+# paxctl -c /opt/dropbox/dropbox
+# paxctl -m /opt/dropbox/dropbox
+----
+
+Google Talk
++++++++++++
+
+This needs to use the latest version to keep up with the Google download page:
+
+[source,console]
+----
+# echo 'www-plugins/google-talkplugin' >> /etc/portage/package.keywords/googletalk
+# echo '=www-plugins/google-talkplugin-3.13.2.0 Google-TOS' >> /etc/portage/package.license/googletalk
+----
+
+That enables usage of Google Voice for phone calls in Chromium. Nothing had to be disabled for it protection wise to work.  
+
+Home Directory Encryption
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This was put off till the end in order to avoid dealing with too much trouble during setup. After much research I came to the conclusion that using http://www.arg0.net/encfs[encfs] would allow for a reasonable balance in having a secure system and time to setup. Everything that would contain personal documents was in `/home`, so the idea was to encrypt that alone and leave the rest of the system (freely available software) to its own. As this works with FUSE, support will need to be enabled in the kernel, and fuse (sys-fs/fuse) will need to be installed.
+
+First is to logout of the system entirely for all users. In this case there was only one user. Also X11 based login managers such as gdm, kdm, and xdm will all need to be shutdown. Next, have a root screen up to handle the administrative tasks, and be sure it isn't in the `/home` directory somewhere. Now to create an encrypted location for `/home` to map to:
+
+[source,console]
+----
+# mv /home /home.orig
+# mkdir /home /home.enc
+# encfs --public /home.enc /home
+----
+
+This creates a directory, `/home.enc`, where all of the `/home` files will be in encrypted form. `/home` will become the unencrypted version when the proper key is given. From then on all files that go to `/home` are encrypted. `--public` was provided to make DropBox work properly, which will fail to run without it set. When first run, `encfs` will promopt:
+
+[source,text]
+----
+Creating new encrypted volume.
+Please choose from one of the following options:
+ enter "x" for expert configuration mode,
+ enter "p" for pre-configured paranoia mode,
+ anything else, or an empty line will select standard mode.
+?>
+----
+
+Here standard mode was selected by simply pressing enter. This provides a reasonable balance between security an performance for a desktop system. After selection of the security mode, a prompt will appear to set the key for encryption. Enter the password and remember, if you lose it your home data will no longer be accessible in plain form. It's recommended to back up the data to a tarball somewhere, and then use gpg encryption to secure it:
+
+[source,console]
+----
+# tar cjpvf /backup/someplace/home-backup.tar.bz2 /home.orig
+# gpg -c /backup/someplace/home-backup.tar.bz2
+----
+
+Later backups can be retrieved by running:
+
+[source,console]
+# gpg /backup/someplace/home-backup.tar.bz2.gpg
+
+Which will prompt for the password used to protect the file, and decrypt if it was successfully entered. Now it's time to encrypt the home data by simply copying the old data to the new encrypted home:
+
+[source,console]
+----
+# rsync -a --progress /home.orig/ /home/
+----
+
+One final step for X11 users is to get around an issue with the Xauthority file not locking properly. The following snippet can be added to the user shell's rc file (`~/.bashrc` for example):
+
+[source,console]
+----
+export XAUTHORITY=/tmp/.Xauthority-$USER
+export ICEAUTHORITY=/tmp/.ICEauthority-$USER
+----
+
+From there X11 should start without any issues.
+
+Conclusion
+~~~~~~~~~~
+
+Using this system I was able to confirm the following:
+
+* Skype works without any issues, and the other party is able to hear me okay
+* Google Voice plugin works
+* Thunderbird shows no issues, and is able to perform well with emails running into the ten thousands
+* LibreOffice did not show any issues as was expected
+* DropBox indexes and downloads okay
+* Amarok is able to play audio just fine
+* Chromium is able to visit most major site without issue (save Flash based sites of course)
+* Irssi connects just fine, though it was not anticipated that it would have any issues
+
+As for what's next:
+
+* Evaluate the security of Java and WebEx for desktop sharing meetings (for now phone dial-in is always an option)
+* Figure out how to secure irssi passwords for NickServ and server authentication
+* Look into a CampFire desktop solution, with the web version currently being a suitable alternative
+
+I hope this guide shows that through even with the security provided through compile time and Grsecurity kernel protection, a reasonable workstation can be setup to provide practical usage. It will be interesting to see how these technologies will progress in the future to work towards further lessening the gap between security and usability.
