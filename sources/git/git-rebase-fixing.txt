@@ -100,7 +100,7 @@ pick 67b8cf6 Revert "This is a mistake"
 # Note that empty commits are commented out
 ----
 
-There's also some nice help text that gets displayed along with it. So first order of business is to combine all these commits into one. This is one with the fixup command, which takes the previous commit and combines it into one while disregarding commit messages:
+There's also some nice help text that gets displayed along with it. So first order of business is to combine all these commits into one. This is done with the fixup command, which takes the previous commit and combines it into one while disregarding commit messages:
 
 [source,text]
 ----
