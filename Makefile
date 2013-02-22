@@ -1,5 +1,5 @@
 ASCIIDOC=asciidoc
-ASCIIDOC_OPTIONS=-a pygments -b xhtml11 --theme flask
+ASCIIDOC_OPTIONS=-a pygments -a badges -a icons -b xhtml11 --theme flask
 MKDIR_P=mkdir -p
 
 SRCDIR=sources
