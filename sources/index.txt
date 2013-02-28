@@ -17,3 +17,4 @@ Articles
 * link:/security/talk-on-security-process.html[A Talk On Security Process]
 * link:/security/secure-workstation.html[The Secure Workstation]
 * link:/git/git-force.html[On git push --force]
+* link:/git/git-rebase-fixing.html[Git Rebase Fixing]
