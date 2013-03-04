@@ -1,0 +1,230 @@
+Python Class Methods and self
+=============================
+Chris White <cwhite@engineyard.com>
+v1.0, 2013-02-06
+
+Introduction
+~~~~~~~~~~~~
+
+For those who have learned object oriented programming through languages such
+as Java, the Python style of method may seem foreign. Instead of using
+keywords such as `this`, Python instead has a `self` argument that is passed in
+with each method. This article is meant to look at how `self` works and some
+of the logic behind it.
+
+A Basic Method
+~~~~~~~~~~~~~~
+
+A basic example of a method being called in a class is something like this:
+
+[source,python]
+----
+#!/bin/python
+
+class Person:
+  def __init__(self,name):
+    self.name = name
+
+  def sayname(self):
+    print("Your name is", self.name)
+
+
+myself = Person("Chris")
+myself.sayname()
+----
+
+The output of this code is:
+
+[source,text]
+Your name is Chris
+
+In the code there is a class constructor which takes `self` and a name, and a
+method which takes just `self` as an argument. However when they're called
+there is no variable that is passed in for the self part of the argument.
+Where is it coming from?
+
+The Hidden self
+~~~~~~~~~~~~~~~
+
+The answer to this lies within the python interpreter itself. In this case
+CPython will be used to show the logic. What's happening in fact is that self
+is being passed in behind the scenes, as shown from `method_call` located in
+`Objects/classobject.c` in the Python source tree. The code listing for
+`method_call` is as follows:
+
+[source,c]
+----
+static PyObject *
+method_call(PyObject *func, PyObject *arg, PyObject *kw)
+{
+    PyObject *self = PyMethod_GET_SELF(func);
+    PyObject *result;
+
+    func = PyMethod_GET_FUNCTION(func);
+    if (self == NULL) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
+    else {
+        Py_ssize_t argcount = PyTuple_Size(arg);
+        PyObject *newarg = PyTuple_New(argcount + 1);
+        int i;
+        if (newarg == NULL)
+            return NULL;
+        Py_INCREF(self);
+        PyTuple_SET_ITEM(newarg, 0, self);
+        for (i = 0; i < argcount; i++) {
+            PyObject *v = PyTuple_GET_ITEM(arg, i);
+            Py_XINCREF(v);
+            PyTuple_SET_ITEM(newarg, i+1, v);
+        }
+        arg = newarg;
+    }
+    result = PyObject_Call((PyObject *)func, arg, kw);
+    Py_DECREF(arg);
+    return result;
+}
+----
+
+There's quite a bit of C code here, but only a few parts need to be focused
+on. First the code attempts to get `self` by looking at what called the
+method. If nothing comes back, Python throws an error:
+
+[source,c]
+----
+    PyObject *self = PyMethod_GET_SELF(func);
+    PyObject *result;
+
+    func = PyMethod_GET_FUNCTION(func);
+    if (self == NULL) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
+----
+
+Next it resizes the argument array, adding one to the length in order to
+accommodate `self` being passed in:
+
+[source,c]
+----
+        Py_ssize_t argcount = PyTuple_Size(arg);
+        PyObject *newarg = PyTuple_New(argcount + 1);
+----
+
+Then it shifts in self as the first argument, adding the other arguments at
+the end:
+
+[source,c]
+----
+        PyTuple_SET_ITEM(newarg, 0, self);
+        for (i = 0; i < argcount; i++) {
+            PyObject *v = PyTuple_GET_ITEM(arg, i);
+            Py_XINCREF(v);
+            PyTuple_SET_ITEM(newarg, i+1, v);
+        }
+        arg = newarg;
+----
+
+Finally the method is now called with self and the other arguments passed into
+the method:
+
+[source,c]
+  result = PyObject_Call((PyObject *)func, arg, kw);
+
+NOTE: The references to *REF in the code is for Python's garbage collection system, which uses http://arctrix.com/nas/python/gc/[reference counting]
+
+Why?
+~~~~
+
+The Python FAQ on design has a
+http://docs.python.org/2/faq/design.html#why-must-self-be-used-explicitly-in-method-definitions-and-calls[fairly
+detailed answer] on the topic. Much of the inspiration for this system was
+from http://en.wikipedia.org/wiki/Modula-3[Modula-3]. There are three main
+reasons given for why Python in particular decided to go with this system.
+
+Instance Variables vs Local Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Take for example the following code:
+
+[source,python]
+----
+class Person:
+  
+  def setname(self,firstname,lastname):
+    self.name = firstname + " " + lastname
+    print("Name changed to", self.name)
+
+
+myself = Person()
+myself.setname("Chris", "White")
+----
+
+Now take away the `self`:
+
+[source,python]
+----
+class Person:
+  
+  def setname(firstname,lastname):
+    name = firstname + " " + lastname
+    print("Name changed to", name)
+----
+
+Is this just setting name temporarily for local use? Or is it going to be
+re-used in the class somewhere else? It's hard to tell with the later example.
+The first example however makes it explicit that the name will most likely be
+referenced somewhere in the class later.
+
+Base Classes and Overrides
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For an example of this:
+
+[source,python]
+----
+#!/bin/python
+
+class Chris:
+  
+  def givefood(self,food):
+    self.food = food
+
+  def eatfood(self):
+    print("Chris eats", self.food)
+
+class AngryChris(Chris):
+  
+  def eatfood(self):
+    Chris.eatfood(self)
+    print("Then he storms off")
+
+myself = AngryChris()
+myself.givefood("carrots")
+myself.eatfood()
+----
+
+Here there is a base class of `Chris` which is inherited by `AngryChris`. The
+method `eatfood` is overridden by the `AngryChris` class, but still calls the
+base `Chris` class' `eatfood` method. This allows for the base class to be
+able to work with the inherited class and operate on its attributes and
+methods directly.
+
+Syntactic Assignment Issue
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The final reason is more of a design explanation, so I'll quote it here instead:
+
+[quote]
+----
+Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.
+----
+
+Conclusion
+~~~~~~~~~~
+
+This in conclusion is the logic behind explicitly indicating `self` in a
+method argument, as well as using it within the method. The logic behind the
+scenes was also shown for those curious. Hopefully this will clear up why the
+design decision was made and why it differs from languages such as Java and
+C++.
