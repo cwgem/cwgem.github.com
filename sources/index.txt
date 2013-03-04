@@ -14,7 +14,19 @@ Hello and welcome to my personal site hosted on http://pages.github.com[GitHub p
 Articles
 ~~~~~~~~
 
+Security
+^^^^^^^^
+
 * link:/security/talk-on-security-process.html[A Talk On Security Process]
 * link:/security/secure-workstation.html[The Secure Workstation]
+
+Git
+^^^
+
 * link:/git/git-force.html[On git push --force]
 * link:/git/git-rebase-fixing.html[Git Rebase Fixing]
+
+Python
+^^^^^^
+
+* link:/python/class-methods-and-self.html[Python Class Methods and self]
