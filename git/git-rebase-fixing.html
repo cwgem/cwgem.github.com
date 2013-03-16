@@ -877,7 +877,7 @@ asciidoc.install();
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph"><p><a href="/">Home</a></p></div>
+<p class="paragraph"><a href="/">Home</a></p>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -890,11 +890,11 @@ asciidoc.install();
 </div>
 <div class="sect2">
 <h3 id="_introduction">Introduction</h3>
-<div class="paragraph"><p><code>git rebase</code> is a feature that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with and may become quite irritated. However, rebasing can provide a quick an easy way to cleanup commits before pushing them to others. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the <a href="https://github.com/wayneeseguin/rvm">main RVM repository</a>.</p></div>
+<p class="paragraph"><code>git rebase</code> is a feature that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with and may become quite irritated. However, rebasing can provide a quick an easy way to cleanup commits before pushing them to others. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the <a href="https://github.com/wayneeseguin/rvm">main RVM repository</a>.</p>
 </div>
 <div class="sect2">
 <h3 id="_woops_8230">Woops&#8230;</h3>
-<div class="paragraph"><p>So right now there&#8217;s a fix I made for a bug in RVM that I&#8217;m about to put in a pull request for. So now I&#8217;ll fake a mistake and commit it:</p></div>
+<p class="paragraph">So right now there&#8217;s a fix I made for a bug in RVM that I&#8217;m about to put in a pull request for. So now I&#8217;ll fake a mistake and commit it:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> vim scripts/cli
 <span class="gp">$</span> git add scripts/cli
@@ -909,17 +909,17 @@ asciidoc.install();
 <span class="go">To git@github.com:cwgem/rvm.git</span>
 <span class="go">   4994dd5..618f439  ruby-reinstall -&gt; ruby-reinstall</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Now it&#8217;s not only committed, but also pushed to the remote repository (which is once again an exclusive use fork). While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Fortunately this can be fixed.</p></div>
+<p class="paragraph">Now it&#8217;s not only committed, but also pushed to the remote repository (which is once again an exclusive use fork). While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Fortunately this can be fixed.</p>
 </div>
 <div class="sect2">
 <h3 id="_git_magic">Git Magic</h3>
-<div class="paragraph"><p>The first order of business is reverting the mistake:</p></div>
+<p class="paragraph">The first order of business is reverting the mistake:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
 <span class="go">[ruby-reinstall 67b8cf6] Revert &quot;This is a mistake&quot;</span>
 <span class="go"> 1 file changed, 1 insertion(+)</span>
 </pre></div></div></div>
-<div class="paragraph"><p>But now looking at the logs:</p></div>
+<p class="paragraph">But now looking at the logs:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>$ git log
 commit 67b8cf6de9fc6b7cb53c793f6826fee3a203a2fc
@@ -942,7 +942,7 @@ Date:   Tue Feb 19 19:54:54 2013 -0800
 
     Fixed rvm reinstall/remove ruby not working properly
 </pre></div></div></div>
-<div class="paragraph"><p>This would be annoying for the person on the other side of the pull request to review. That&#8217;s where <code>git rebase</code> comes in handy. In this case <code>git rebase</code> will be started by what&#8217;s called interactive mode. Interactive mode uses <code>$EDITOR</code> to handle history adjustments:</p></div>
+<p class="paragraph">This would be annoying for the person on the other side of the pull request to review. That&#8217;s where <code>git rebase</code> comes in handy. In this case <code>git rebase</code> will be started by what&#8217;s called interactive mode. Interactive mode uses <code>$EDITOR</code> to handle history adjustments:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> git rebase -i HEAD~3 <span class="c"># work with all commits starting from 3 commits up to HEAD</span>
 </pre></div></div></div>
@@ -968,19 +968,19 @@ pick 67b8cf6 Revert &quot;This is a mistake&quot;
 #
 # Note that empty commits are commented out
 </pre></div></div></div>
-<div class="paragraph"><p>There&#8217;s also some useful help text that gets displayed to direct the process. First order of business is to combine all these commits into one. This is done with the <code>fixup</code> command, which takes the previous commit and combines it into one, disregarding the commit message:</p></div>
+<p class="paragraph">There&#8217;s also some useful help text that gets displayed to direct the process. First order of business is to combine all these commits into one. This is done with the <code>fixup</code> command, which takes the previous commit and combines it into one, disregarding the commit message:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>pick 4994dd5 Fixed rvm reinstall/remove ruby not working properly
 fixup 618f439 This is a mistake
 fixup 67b8cf6 Revert &quot;This is a mistake&quot;
 </pre></div></div></div>
-<div class="paragraph"><p>The commit message desired is flagged as <code>reword</code>, so it can be adjusted:</p></div>
+<p class="paragraph">The commit message desired is flagged as <code>reword</code>, so it can be adjusted:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>reword 4994dd5 Fixed rvm reinstall/remove ruby not working properly
 fixup 618f439 This is a mistake
 fixup 67b8cf6 Revert &quot;This is a mistake&quot;
 </pre></div></div></div>
-<div class="paragraph"><p>Now to save the file which lets the commit be reworded properly:</p></div>
+<p class="paragraph">Now to save the file which lets the commit be reworded properly:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
 
@@ -995,7 +995,7 @@ fixup 67b8cf6 Revert &quot;This is a mistake&quot;
 #       modified:   scripts/cli
 #
 </pre></div></div></div>
-<div class="paragraph"><p>This results in the final commit message:</p></div>
+<p class="paragraph">This results in the final commit message:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> git rebase -i HEAD~3
 <span class="go">[detached HEAD b3d43f3] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.</span>
@@ -1004,7 +1004,7 @@ fixup 67b8cf6 Revert &quot;This is a mistake&quot;
 <span class="go"> 1 file changed, 8 insertions(+), 8 deletions(-)</span>
 <span class="go">Successfully rebased and updated refs/heads/ruby-reinstall.</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Just to be safe, verify with <code>git log</code>:</p></div>
+<p class="paragraph">Just to be safe, verify with <code>git log</code>:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>$ git log
 commit 04730359a0c59c1240a8535658562aec8dcbb61a
@@ -1015,7 +1015,7 @@ Date:   Tue Feb 19 19:54:54 2013 -0800
 
 commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
 </pre></div></div></div>
-<div class="paragraph"><p>That&#8217;s it. Now all that&#8217;s left is a single commit with a fixed commit message all in one fatal swoop. Now this is once again a fork that only I work with, so I can make the call to force a remote push:</p></div>
+<p class="paragraph">That&#8217;s it. Now all that&#8217;s left is a single commit with a fixed commit message all in one fatal swoop. Now this is once again a fork that only I work with, so I can make the call to force a remote push:</p>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -1034,18 +1034,18 @@ commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
 <span class="go">To git@github.com:cwgem/rvm.git</span>
 <span class="go"> + 618f439...0473035 ruby-reinstall -&gt; ruby-reinstall (forced update)</span>
 </pre></div></div></div>
-<div class="paragraph"><p>This effectively overwrites the remote repository&#8217;s history as well, merging the commits so that everything looks clean when the pull request is done.</p></div>
+<p class="paragraph">This effectively overwrites the remote repository&#8217;s history as well, merging the commits so that everything looks clean when the pull request is done.</p>
 </div>
 <div class="sect2">
 <h3 id="_conclusion">Conclusion</h3>
-<div class="paragraph"><p>While being a useful piece of functionality, <code>git rebase</code> should be used with caution when dealing with other people&#8217;s work. Consider it like proofreading a book, where someone edits paragraphs and sentence structure. Once the book goes out to customers, the proofreader wouldn&#8217;t visit customers in person to fix an issue they noticed after the fact. Instead they would most likely issue an errata (<code>git revert</code> or additional commits). <code>git rebase</code> works the same way, "proofreading" commits before publishing them to the public (or internally within an organization). It&#8217;s definitely a great tool to have in one&#8217;s git toolbox.</p></div>
+<p class="paragraph">While being a useful piece of functionality, <code>git rebase</code> should be used with caution when dealing with other people&#8217;s work. Consider it like proofreading a book, where someone edits paragraphs and sentence structure. Once the book goes out to customers, the proofreader wouldn&#8217;t visit customers in person to fix an issue they noticed after the fact. Instead they would most likely issue an errata (<code>git revert</code> or additional commits). <code>git rebase</code> works the same way, "proofreading" commits before publishing them to the public (or internally within an organization). It&#8217;s definitely a great tool to have in one&#8217;s git toolbox.</p>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-02-28 05:31:08 PST
+Last updated 2013-03-16 13:04:55 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

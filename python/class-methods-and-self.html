@@ -878,15 +878,15 @@ asciidoc.install();
 <div id="content">
 <div class="sect2">
 <h3 id="_introduction">Introduction</h3>
-<div class="paragraph"><p>For those who have learned object oriented programming through languages such
+<p class="paragraph">For those who have learned object oriented programming through languages such
 as Java, the Python style of method may seem foreign. Instead of using
 keywords such as <code>this</code>, Python instead has a <code>self</code> argument that is passed in
 with each method. This article is meant to look at how <code>self</code> works and some
-of the logic behind it.</p></div>
+of the logic behind it.</p>
 </div>
 <div class="sect2">
 <h3 id="_a_basic_method">A Basic Method</h3>
-<div class="paragraph"><p>A basic example of a method being called in a class is something like this:</p></div>
+<p class="paragraph">A basic example of a method being called in a class is something like this:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
 
@@ -901,22 +901,22 @@ of the logic behind it.</p></div>
 <span class="n">myself</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s">&quot;Chris&quot;</span><span class="p">)</span>
 <span class="n">myself</span><span class="o">.</span><span class="n">sayname</span><span class="p">()</span>
 </pre></div></div></div>
-<div class="paragraph"><p>The output of this code is:</p></div>
+<p class="paragraph">The output of this code is:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>Your name is Chris
 </pre></div></div></div>
-<div class="paragraph"><p>In the code there is a class constructor which takes <code>self</code> and a name, and a
+<p class="paragraph">In the code there is a class constructor which takes <code>self</code> and a name, and a
 method which takes just <code>self</code> as an argument. However when they&#8217;re called
 there is no variable that is passed in for the self part of the argument.
-Where is it coming from?</p></div>
+Where is it coming from?</p>
 </div>
 <div class="sect2">
 <h3 id="_the_hidden_self">The Hidden self</h3>
-<div class="paragraph"><p>The answer to this lies within the python interpreter itself. In this case
+<p class="paragraph">The answer to this lies within the python interpreter itself. In this case
 CPython will be used to show the logic. What&#8217;s happening in fact is that self
 is being passed in behind the scenes, as shown from <code>method_call</code> located in
 <code>Objects/classobject.c</code> in the Python source tree. The code listing for
-<code>method_call</code> is as follows:</p></div>
+<code>method_call</code> is as follows:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">static</span> <span class="n">PyObject</span> <span class="o">*</span>
 <span class="nf">method_call</span><span class="p">(</span><span class="n">PyObject</span> <span class="o">*</span><span class="n">func</span><span class="p">,</span> <span class="n">PyObject</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="n">PyObject</span> <span class="o">*</span><span class="n">kw</span><span class="p">)</span>
@@ -949,9 +949,9 @@ is being passed in behind the scenes, as shown from <code>method_call</code> loc
     <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div></div></div>
-<div class="paragraph"><p>There&#8217;s quite a bit of C code here, but only a few parts need to be focused
+<p class="paragraph">There&#8217;s quite a bit of C code here, but only a few parts need to be focused
 on. First the code attempts to get <code>self</code> by looking at what called the
-method. If nothing comes back, Python throws an error:</p></div>
+method. If nothing comes back, Python throws an error:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>    <span class="n">PyObject</span> <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">PyMethod_GET_SELF</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
     <span class="n">PyObject</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
@@ -962,14 +962,14 @@ method. If nothing comes back, Python throws an error:</p></div>
         <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
     <span class="p">}</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Next it resizes the argument array, adding one to the length in order to
-accommodate <code>self</code> being passed in:</p></div>
+<p class="paragraph">Next it resizes the argument array, adding one to the length in order to
+accommodate <code>self</code> being passed in:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>        <span class="n">Py_ssize_t</span> <span class="n">argcount</span> <span class="o">=</span> <span class="n">PyTuple_Size</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
         <span class="n">PyObject</span> <span class="o">*</span><span class="n">newarg</span> <span class="o">=</span> <span class="n">PyTuple_New</span><span class="p">(</span><span class="n">argcount</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Then it shifts in self as the first argument, adding the other arguments at
-the end:</p></div>
+<p class="paragraph">Then it shifts in self as the first argument, adding the other arguments at
+the end:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>        <span class="n">PyTuple_SET_ITEM</span><span class="p">(</span><span class="n">newarg</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argcount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
@@ -979,8 +979,8 @@ the end:</p></div>
         <span class="p">}</span>
         <span class="n">arg</span> <span class="o">=</span> <span class="n">newarg</span><span class="p">;</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Finally the method is now called with self and the other arguments passed into
-the method:</p></div>
+<p class="paragraph">Finally the method is now called with self and the other arguments passed into
+the method:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="n">result</span> <span class="o">=</span> <span class="n">PyObject_Call</span><span class="p">((</span><span class="n">PyObject</span> <span class="o">*</span><span class="p">)</span><span class="n">func</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">kw</span><span class="p">);</span>
 </pre></div></div></div>
@@ -995,14 +995,14 @@ the method:</p></div>
 </div>
 <div class="sect2">
 <h3 id="_why">Why?</h3>
-<div class="paragraph"><p>The Python FAQ on design has a
+<p class="paragraph">The Python FAQ on design has a
 <a href="http://docs.python.org/2/faq/design.html#why-must-self-be-used-explicitly-in-method-definitions-and-calls">fairly
 detailed answer</a> on the topic. Much of the inspiration for this system was
 from <a href="http://en.wikipedia.org/wiki/Modula-3">Modula-3</a>. There are three main
-reasons given for why Python in particular decided to go with this system.</p></div>
+reasons given for why Python in particular decided to go with this system.</p>
 <div class="sect3">
 <h4 id="_instance_variables_vs_local_variables">Instance Variables vs Local Variables</h4>
-<div class="paragraph"><p>Take for example the following code:</p></div>
+<p class="paragraph">Take for example the following code:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
 
@@ -1014,7 +1014,7 @@ reasons given for why Python in particular decided to go with this system.</p></
 <span class="n">myself</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
 <span class="n">myself</span><span class="o">.</span><span class="n">setname</span><span class="p">(</span><span class="s">&quot;Chris&quot;</span><span class="p">,</span> <span class="s">&quot;White&quot;</span><span class="p">)</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Now take away the <code>self</code>:</p></div>
+<p class="paragraph">Now take away the <code>self</code>:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
 
@@ -1022,14 +1022,14 @@ reasons given for why Python in particular decided to go with this system.</p></
     <span class="n">name</span> <span class="o">=</span> <span class="n">firstname</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">lastname</span>
     <span class="k">print</span><span class="p">(</span><span class="s">&quot;Name changed to&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Is this just setting name temporarily for local use? Or is it going to be
+<p class="paragraph">Is this just setting name temporarily for local use? Or is it going to be
 re-used in the class somewhere else? It&#8217;s hard to tell with the later example.
 The first example however makes it explicit that the name will most likely be
-referenced somewhere in the class later.</p></div>
+referenced somewhere in the class later.</p>
 </div>
 <div class="sect3">
 <h4 id="_base_classes_and_overrides">Base Classes and Overrides</h4>
-<div class="paragraph"><p>For an example of this:</p></div>
+<p class="paragraph">For an example of this:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
 
@@ -1051,35 +1051,35 @@ referenced somewhere in the class later.</p></div>
 <span class="n">myself</span><span class="o">.</span><span class="n">givefood</span><span class="p">(</span><span class="s">&quot;carrots&quot;</span><span class="p">)</span>
 <span class="n">myself</span><span class="o">.</span><span class="n">eatfood</span><span class="p">()</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Here there is a base class of &#8216;Chris` which is inherited by <code>AngryChris</code>. The
+<p class="paragraph">Here there is a base class of &#8216;Chris` which is inherited by <code>AngryChris</code>. The
 method <code>eatfood</code> is overridden by the <code>AngryChris</code> class, but still calls the
 base <code>Chris</code> class&#8217; <code>eatfood</code> method. This allows for the base class to be
 able to work with the inherited class and operate on its attributes and
-methods directly.</p></div>
+methods directly.</p>
 </div>
 <div class="sect3">
 <h4 id="_syntactic_assignment_issue">Syntactic Assignment Issue</h4>
-<div class="paragraph"><p>The final reason is more of a design explanation, so I&#8217;ll quote it here instead:</p></div>
+<p class="paragraph">The final reason is more of a design explanation, so I&#8217;ll quote it here instead:</p>
 <div class="listingblock">
 <div class="content">
-<blockquote>Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.</blockquote>
+<pre><code>Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.</code></pre>
 </div></div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_conclusion">Conclusion</h3>
-<div class="paragraph"><p>This in conclusion is the logic behind explicitly indicating <code>self</code> in a
+<p class="paragraph">This in conclusion is the logic behind explicitly indicating <code>self</code> in a
 method argument, as well as using it within the method. The logic behind the
 scenes was also shown for those curious. Hopefully this will clear up why the
 design decision was made and why it differs from languages such as Java and
-C++.</p></div>
+C++.</p>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-03 20:01:23 PST
+Last updated 2013-03-16 13:04:55 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">
