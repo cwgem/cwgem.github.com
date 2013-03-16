@@ -30,3 +30,8 @@ Python
 ^^^^^^
 
 * link:/python/class-methods-and-self.html[Python Class Methods and self]
+
+Society
+^^^^^^^
+
+* link:/society/racism-and-sexism.html[Racism and Sexism]
