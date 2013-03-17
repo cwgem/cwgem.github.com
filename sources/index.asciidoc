@@ -19,6 +19,7 @@ Security
 
 * link:/security/talk-on-security-process.html[A Talk On Security Process]
 * link:/security/secure-workstation.html[The Secure Workstation]
+* link:/security/balanced-security.html[Balanaced Security]
 
 Git
 ^^^
