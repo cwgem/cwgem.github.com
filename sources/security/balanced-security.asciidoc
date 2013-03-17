@@ -1,0 +1,58 @@
+Balanced Security
+===================
+:Author: Chris White
+:Email: <cwprogram@live.com>
+:Date: 2013-03-17
+:Revision: 1.0
+
+== Introduction
+
+When many of the Rails vulnerabilities came out, people started asking questions about security. It also hit on something I kid about a lot, which is "Security is looking at any user input and trembling in fear". However things are much deeper than that. What I really consider security is to be a midpoint between prevention of unauthorized use and maintaining usability.
+
+== The Core Symptom
+
+On a more philosophical level security is an issue because humanity is granted free will. Individuals have the freedom to do good acts, but they also have the freedom to partake in malicious activity. This leads to malicious attackers who will use various tactics to gain access to information that they shouldn't. The presence of these attackers leads to the need for security to protect valuable information. In essence, security will continue to exist as long as there is humanity, and the privilege of free will is granted.
+
+== The Security and User Utopia
+
+In the security world there are two extremes: the security utopia and the user utopia. The security utopia is what one considers to be a "big brother" type of system. Users are under constant surveillance and must take a number steps to authenticate themselves for every action they take. Imagine if you will having to take part in 10 factor authentication for *every single command* inserted into a shell. All commands would also have to be reviewed before they were executed. Users accessing a website for every request (including XHTTP) they made to a webserver, and someone would have to review all requests before executing.
+
+Now there's the user utopia. In the user utopia there are no access controls. Everyone has free access to all information. I could for example freely look at someone else's bank account without any authorization. Multi-user machines would become an organizational tool, and everyone would have complete access to each others files. Cryptography would no longer be necessary because individuals would not access what they did not need to. Productivity would skyrocket because there would be no time spent trying to remember login information or retrieving a lost password. Sounds too good to be true? That's because it is.
+
+== The Balance Game
+
+So what is left is a balance game. Security and usability are constantly fighting with each other. To put it quite bluntly, security is a hindrance. Every time that a user has to login to a website, they could be taking that time to get things done. They may have the password memorized, or maybe they have a password manager that they use to keep track of passwords. Either way some time is taken away through the login process. How much time varies depending on what type of login process it is.
+
+It's not just about login processes either. Application code is affected as well. Take for example the http://rubysource.com/anatomy-of-an-exploit-an-in-depth-look-at-the-rails-yaml-vulnerability/[Rails YAML vulnerability]. Here there was a piece of functionality that developers considered useful. The rationale was that it "gives developers the ability to write and read Ruby objects to disk, like an object database." Creators of the code were most likely focusing on bringing benefit to the developer, and didn't consider this particular case. Unfortunately security had to push back when it found out that such code could be used in crafting an exploit. This is a real world example of the balance shift between security and usability.
+
+== Enter Compromise
+
+As with many other cases of struggles between two opposing forces, compromise becomes the best solution. A situation of compromise that many developers will be familiar with is the ssh-agent tool. This tool allows for storage of private key authentication in memory so the user does not have to keep typing in their passphrase every time they want to use a password protected private key. However the compromise for usability results in a loss of security. The more private key information that's stored through ssh-agent, the more centralized the data is. This means instead of having to crack individual private key passphrases, an attacker can http://docstore.mik.ua/orelly/networking_2ndEd/ssh/ch06_03.htm#ch06-22-fm2xml[target the IPC socket instead]. However not all is lost as some security still exists. Users without the ability to access the IPC socket would have to work against cracking the passphrase. The user can also unload their agent keys at a set interval to make timing an important part of the attack, as well as potentially reducing the amount of data an attacker has access to.
+
+== Looking Forward
+
+So how can security and usability best be balanced? Here are a few ideas on this question:
+
+=== Work With The User Not Against Them
+
+You can make something secure, but if the user feels too burned by the change they will resist it. This resistance can be:
+
+- Ignoring the security (UAC in Windows, SSL warnings, etc.)
+- Bypass the security ( Automation methods )
+- Make the security never happen (Complain to management about productivity loss)
+
+If the user takes any of these actions, the security threat becomes the same or potentially worse than before.
+
+=== Work Behind The Scenes
+
+Try and take security solutions to the backend as much as possible. Avoiding interacting with items the user directly interacts with (unless no other choice is available), as it makes them more aware of security battling against usability. An example of this is systems such as http://msdn.microsoft.com/en-us/library/windows/desktop/dd371730(v=vs.85).aspx[Data Execution Protection] in Internet Explorer which work not on user action, but instead against action the code is taking. By working in the background like this the user can stay productive will the system works to help protect themselves.
+
+Another behind the scenes method is to take protection to the language level. There is a http://www.cs.dartmouth.edu/~sergey/langsec/[LANGSEC group] that is dedicated to this type of theory. Discussions between http://www.schneier.com/blog/archives/2010/10/firesheep.html#c478900[dynamic and strongly typed languages with regards to security] have also taken place. However this is a bit difficult because it may tread on programmer productivity through the usage of dynamic typing, causing a balance shift.
+
+=== Education
+
+Users need to be educated on security. If a security system is put in place users need to understand why. This is critical to ensure that they are able to see what gains are had by giving up their usability and shifting the balance. My online banking system for example automatically logs me out after a certain amount of inactivity. However, because I know this takes place (to prevent an attacker from being able to takeover an already logged in session), I'm not frustrated when I have to login again.
+
+=== Realize That Perfect Security Doesn't Exist
+
+It's good to go through the above points and look towards making the system more secure. However I believe it best to be incremental with changes. Focus on specific items one at a time and execute them well. Trying to think up every single edge case will take too much time to process. Also realize that http://xkcd.com/538/[any attacker can gain access with enough motivation]. Work on what you can, and if an attacker does somehow manage to get access do some research and prevent the issue from occurring in the future. I believe this to be the best way to survive in the security world.
