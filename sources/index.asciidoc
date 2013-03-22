@@ -30,3 +30,4 @@ Hello and welcome to my personal site hosted on http://pages.github.com[GitHub p
 === Society
 
 * link:/society/racism-and-sexism.html[Racism and Sexism]
+* link:/society/google-readers-bigger-problem.html[Google Reader's Bigger Problem]
