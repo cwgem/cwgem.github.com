@@ -874,8 +874,9 @@ asciidoc.install();
 <span id="revdate">Tue Feb 19 PST 2013</span>
 </div>
 <div id="content">
-<div class="sect2">
-<h3 id="_introduction">Introduction</h3>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
 <p class="paragraph"><code>git push --force</code> can be a pretty scary command to execute for some, as it should be. The worst case scenario is that history is rewritten on a remote repository, and people lose valuable work. It is also bypassing the integrity that git provides. To quote the <code>git push</code> man page:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>       -f, --force
@@ -884,20 +885,28 @@ asciidoc.install();
 </pre></div></div></div>
 <p class="paragraph">So what does it mean to "use it with care"? This article is meant to quickly list a few use cases where I consider <code>git push --force</code> to be reasonable to utilize.</p>
 </div>
-<div class="sect2">
-<h3 id="_personal_code">Personal Code</h3>
+</div>
+<div class="sect1">
+<h2 id="_personal_code">Personal Code</h2>
+<div class="sectionbody">
 <p class="paragraph">First would be repositories where the author has sole access to both local and remote repositories (self-hosted). The author may decide that a few commits produce a messy log and wish to clean them up with <code>git rebase</code> after having pushed them to a remote repository. They could also do something more simplistic with <code>git commit --amend</code> after again, having pushed to a remote repository. This can be either a complete mistake (typo in the commit message), or intentional after looking over a few commits later. In essence, it becomes more of a convenience for them.</p>
 </div>
-<div class="sect2">
-<h3 id="_personal_code_forks">Personal Code Forks</h3>
+</div>
+<div class="sect1">
+<h2 id="_personal_code_forks">Personal Code Forks</h2>
+<div class="sectionbody">
 <p class="paragraph">Somewhat like personal code, but potentially available to other users to have access to the code. These are generally forks of other repositories in order to generate pull requests of some sort. Personally I have an exclusive fork of RVM that I use to make contributions to the project. In this case rebasing and amendments may be requested by upstream developers after they have had a chance to review contributions. This is popular process on code sharing sites such as GitHub to cleanup commits before they are integrated to a larger audience. Like personal code repositories, this is another case where history rewrites carry less risk, though it should be noted that users can at some point interact with the repository. In this case the developer should consider whether or not they want to affect that user&#8217;s history. An example of this is having 10 users forking the personal code fork (stale upstream for example). In such cases I would recommend against using <code>git push --force</code>.</p>
 </div>
-<div class="sect2">
-<h3 id="_emergencies_strong_with_communication_strong">Emergencies <strong>With Communication</strong></h3>
+</div>
+<div class="sect1">
+<h2 id="_emergencies_strong_with_communication_strong">Emergencies <strong>With Communication</strong></h2>
+<div class="sectionbody">
 <p class="paragraph">Examples of what can be considered an emergency would be issues such as passwords and credit cards getting pushed. If it&#8217;s something such as credit cards, the developer may have to bite the bullet and overwrite history, communicating to other users of the repository regarding the issue. This is much easier to deal with for internal repositories, but public facing repositories are a bigger pain. In cases of public repositories, you will have to deal with potential user fallout, as well as the fact that someone may have a copy of the repository backed up before the push happened. There is not a universal answer to this, and should be weighed on a case-per-case basis as with other emergencies. Just remember to communicate these changes so that users understand that the lack of integrity between local and remote repositories is intended and not unauthorized access.</p>
 </div>
-<div class="sect2">
-<h3 id="_conclusion">Conclusion</h3>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
 <p class="paragraph">To conclude, here are some basic rules regarding using <code>git push --force</code>:</p>
 <ul class="ulist">
 <li>
@@ -915,11 +924,12 @@ When in doubt, communicate
 </ul>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-16 13:04:55 PDT
+Last updated 2013-03-21 22:48:46 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

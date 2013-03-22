@@ -5,13 +5,11 @@ v1.0, Tue Feb 19 PST 2013
 
 link:/[Home]
 
-Introduction
-~~~~~~~~~~~~
+== Introduction
 
 For many companies the fear of a security breach can put great stress on those involved. With the recent http://www.facebook.com/notes/facebook-security/protecting-people-on-facebook/10151249208250766[Facebook breach due to employee laptops being compromised], a plan came to mind on how to create a fairly secure workstation. Having some experience working on https://github.com/cwgem/catalyst-support[Grsecurity backed EC2 images], I began the task of working on such a system.
 
-Distribution
-~~~~~~~~~~~~
+== Distribution
 
 I chose Gentoo for my distribution of choice, primarily due to familiarity,and also due to the fact that the http://www.gentoo.org/proj/en/hardened/[Hardened Gentoo Project] puts a considerable amount of effort in supporting the security components of interest. For example, there is the hardened toolchain, which introduces technologies such as http://www.research.ibm.com/trl/projects/security/ssp/[stack smashing protector] and http://linuxfromscratch.xtra-net.org/hlfs/view/unstable/glibc-2.4/chapter02/pie.html[position independent code]. This helps with exploits that utilize buffer overflows or assumed memory addresses.
 
@@ -39,8 +37,7 @@ where `repo_name` is simply a text file with the name of the repository, `harden
 
 This easily combines the two profiles giving the benefits of the hardened toolchain, with the requirements for having a suitable KDE desktop. Finally the stable keyword branch of Gentoo was utilized to remain as solid as possible. The main exception to that was using a non-stable marked kernel and a few other required packages to be as up to date as possible and keep in line with the latest Grsecurity patches.
 
-Kernel
-~~~~~~
+== Kernel
 
 The kernel used is  hardened-sources-3.7.8, which includes the http://grsecurity.net/[Grsecurity patchset], as well as a few other security related patchsets. The importance of utilizing this patchset can be addressed by this quote from the project website:
 
@@ -59,29 +56,25 @@ image::/images/ext4-setup.png[Extended attributes enabled in ext4]
 
 This allows for adjusting PaX headers on binaries like Skype, which don't deal well with binary tampering.
 
-Notable Software
-~~~~~~~~~~~~~~~~
+== Notable Software
 
-The List
-^^^^^^^^
+=== The List
 
 Working at EngineYard I use a number of tools to help with various tasks. Of importance to this project was the following list of software:
 
 * Amarok - Show that something "fun" still works in a hardened environment.
 * KDE - Just a personal preference, so pick whatever suits your needs.
 * Chromium - A browser with a solid security model. Also lets passwords be stored using the system keychain (in this case KWallet). No Java, Flash, or PDF plugins will be utilized.
-* Thunderbird - Handle interaction with email. As a bonus it also has great support for https://support.mozillamessaging.com/en-US/kb/digitally-signing-and-encrypting-messages[digital signatures] and http://kb.mozillazine.org/Getting_an_SMIME_certificate[email certificates]. 
+* Thunderbird - Handle interaction with email. As a bonus it also has great support for https://support.mozillamessaging.com/en-US/kb/digitally-signing-and-encrypting-messages[digital signatures] and http://kb.mozillazine.org/Getting_an_SMIME_certificate[email certificates].
 * LibreOffice - Provides basic office suite functionality.
 * Skype - Being a company with remote users, this is often used to setup business meetings.
 * Google Talk - For the times when a regular phone call is necessary.
 * DropBox - Synchronize files with iPad and other devices.
 * Irssi - Connect to IRC there is company work based around open source software, which general communicates with IRC.
 
-Caveats
-^^^^^^^
+=== Caveats
 
-Skype
-+++++
+==== Skype
 
 Skype has a binary tampering system which prevents flagging some security protections off so it works properly. While this is rather unfortunate Skype is an essential business tool. With that in mind it takes a few steps to get it running:
 
@@ -98,8 +91,7 @@ Skype has a binary tampering system which prevents flagging some security protec
 
 After this and some headset setup Skype worked without a hitch and showed no issues during two group meetings.
 
-DropBox
-+++++++
+==== DropBox
 
 Same here with needing to disable protections. This was achieved through doing:
 
@@ -110,8 +102,7 @@ Same here with needing to disable protections. This was achieved through doing:
 # paxctl -m /opt/dropbox/dropbox
 ----
 
-Google Talk
-+++++++++++
+==== Google Talk
 
 This needs to use the latest version to keep up with the Google download page:
 
@@ -121,10 +112,9 @@ This needs to use the latest version to keep up with the Google download page:
 # echo '=www-plugins/google-talkplugin-3.13.2.0 Google-TOS' >> /etc/portage/package.license/googletalk
 ----
 
-That enables usage of Google Voice for phone calls in Chromium. Nothing had to be disabled for it protection wise to work.  
+That enables usage of Google Voice for phone calls in Chromium. Nothing had to be disabled for it protection wise to work.
 
-Home Directory Encryption
-~~~~~~~~~~~~~~~~~~~~~~~~~
+== Home Directory Encryption
 
 This was put off till the end in order to avoid dealing with too much trouble during setup. After much research I came to the conclusion that using http://www.arg0.net/encfs[encfs] would allow for a reasonable balance in having a secure system and time to setup. Everything that would contain personal documents was in `/home`, so the idea was to encrypt that alone and leave the rest of the system (freely available software) to its own. As this works with FUSE, support will need to be enabled in the kernel, and fuse (sys-fs/fuse) will need to be installed.
 
@@ -179,8 +169,7 @@ export ICEAUTHORITY=/tmp/.ICEauthority-$USER
 
 From there X11 should start without any issues.
 
-Conclusion
-~~~~~~~~~~
+== Conclusion
 
 Using this system I was able to confirm the following:
 

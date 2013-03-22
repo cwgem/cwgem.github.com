@@ -3,8 +3,7 @@ Python Class Methods and self
 Chris White <cwhite@engineyard.com>
 v1.0, 2013-02-06
 
-Introduction
-~~~~~~~~~~~~
+== Introduction
 
 For those who have learned object oriented programming through languages such
 as Java, the Python style of method may seem foreign. Instead of using
@@ -12,8 +11,7 @@ keywords such as `this`, Python instead has a `self` argument that is passed in
 with each method. This article is meant to look at how `self` works and some
 of the logic behind it.
 
-A Basic Method
-~~~~~~~~~~~~~~
+== A Basic Method
 
 A basic example of a method being called in a class is something like this:
 
@@ -43,8 +41,7 @@ method which takes just `self` as an argument. However when they're called
 there is no variable that is passed in for the self part of the argument.
 Where is it coming from?
 
-The Hidden self
-~~~~~~~~~~~~~~~
+== The Hidden self
 
 The answer to this lies within the python interpreter itself. In this case
 CPython will be used to show the logic. What's happening in fact is that self
@@ -133,8 +130,7 @@ the method:
 
 NOTE: The references to *REF in the code is for Python's garbage collection system, which uses http://arctrix.com/nas/python/gc/[reference counting]
 
-Why?
-~~~~
+== Why?
 
 The Python FAQ on design has a
 http://docs.python.org/2/faq/design.html#why-must-self-be-used-explicitly-in-method-definitions-and-calls[fairly
@@ -142,15 +138,14 @@ detailed answer] on the topic. Much of the inspiration for this system was
 from http://en.wikipedia.org/wiki/Modula-3[Modula-3]. There are three main
 reasons given for why Python in particular decided to go with this system.
 
-Instance Variables vs Local Variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=== Instance Variables vs Local Variables
 
 Take for example the following code:
 
 [source,python]
 ----
 class Person:
-  
+
   def setname(self,firstname,lastname):
     self.name = firstname + " " + lastname
     print("Name changed to", self.name)
@@ -165,7 +160,7 @@ Now take away the `self`:
 [source,python]
 ----
 class Person:
-  
+
   def setname(firstname,lastname):
     name = firstname + " " + lastname
     print("Name changed to", name)
@@ -176,8 +171,7 @@ re-used in the class somewhere else? It's hard to tell with the later example.
 The first example however makes it explicit that the name will most likely be
 referenced somewhere in the class later.
 
-Base Classes and Overrides
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+=== Base Classes and Overrides
 
 For an example of this:
 
@@ -186,7 +180,7 @@ For an example of this:
 #!/bin/python
 
 class Chris:
-  
+
   def givefood(self,food):
     self.food = food
 
@@ -194,7 +188,7 @@ class Chris:
     print("Chris eats", self.food)
 
 class AngryChris(Chris):
-  
+
   def eatfood(self):
     Chris.eatfood(self)
     print("Then he storms off")
@@ -210,8 +204,7 @@ base `Chris` class' `eatfood` method. This allows for the base class to be
 able to work with the inherited class and operate on its attributes and
 methods directly.
 
-Syntactic Assignment Issue
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+=== Syntactic Assignment Issue
 
 The final reason is more of a design explanation, so I'll quote it here instead:
 
@@ -220,8 +213,7 @@ The final reason is more of a design explanation, so I'll quote it here instead:
 Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.
 ----
 
-Conclusion
-~~~~~~~~~~
+== Conclusion
 
 This in conclusion is the logic behind explicitly indicating `self` in a
 method argument, as well as using it within the method. The logic behind the

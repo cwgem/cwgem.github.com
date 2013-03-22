@@ -7,20 +7,18 @@ link:/[Home]
 
 WARNING: This article utilizes `git push --force` which I've link:/git/git-force.html[discussed the use case of], so please make sure and read it to understand why I'm making an exception
 
-Introduction
-~~~~~~~~~~~~
+== Introduction
 
-`git rebase` is a feature that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with and may become quite irritated. However, rebasing can provide a quick an easy way to cleanup commits before pushing them to others. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the https://github.com/wayneeseguin/rvm[main RVM repository]. 
+`git rebase` is a feature that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with and may become quite irritated. However, rebasing can provide a quick an easy way to cleanup commits before pushing them to others. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the https://github.com/wayneeseguin/rvm[main RVM repository].
 
-Woops...
-~~~~~~~~
+== Woops
 
 So right now there's a fix I made for a bug in RVM that I'm about to put in a pull request for. So now I'll fake a mistake and commit it:
 
 [source,console]
 ----
-$ vim scripts/cli 
-$ git add scripts/cli 
+$ vim scripts/cli
+$ git add scripts/cli
 $ git commit -m "This is a mistake"
 [ruby-reinstall 618f439] This is a mistake
 $ git push origin ruby-reinstall
@@ -35,8 +33,7 @@ To git@github.com:cwgem/rvm.git
 
 Now it's not only committed, but also pushed to the remote repository (which is once again an exclusive use fork). While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Fortunately this can be fixed.
 
-Git Magic
-~~~~~~~~~
+== Git Magic
 
 The first order of business is reverting the mistake:
 
@@ -57,7 +54,7 @@ Author: Chris White <cwhite@engineyard.com>
 Date:   Tue Feb 19 20:55:05 2013 -0800
 
     Revert "This is a mistake"
-    
+
     This reverts commit 618f4398bfeea938a1b9878b9fcf419b94d85e6c.
 
 commit 618f4398bfeea938a1b9878b9fcf419b94d85e6c
@@ -183,7 +180,6 @@ To git@github.com:cwgem/rvm.git
 
 This effectively overwrites the remote repository's history as well, merging the commits so that everything looks clean when the pull request is done.
 
-Conclusion
-~~~~~~~~~~
+== Conclusion
 
 While being a useful piece of functionality, `git rebase` should be used with caution when dealing with other people's work. Consider it like proofreading a book, where someone edits paragraphs and sentence structure. Once the book goes out to customers, the proofreader wouldn't visit customers in person to fix an issue they noticed after the fact. Instead they would most likely issue an errata (`git revert` or additional commits). `git rebase` works the same way, "proofreading" commits before publishing them to the public (or internally within an organization). It's definitely a great tool to have in one's git toolbox.

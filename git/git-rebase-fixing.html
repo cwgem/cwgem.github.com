@@ -887,12 +887,15 @@ asciidoc.install();
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_introduction">Introduction</h3>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
 <p class="paragraph"><code>git rebase</code> is a feature that can be frightening at times for having the ability to rewrite history. In the worst case contributers will have history conflicts to deal with and may become quite irritated. However, rebasing can provide a quick an easy way to cleanup commits before pushing them to others. This case however will look into a remote branch which is a GitHub fork. This fork is solely meant for providing fixes which get pushed to the <a href="https://github.com/wayneeseguin/rvm">main RVM repository</a>.</p>
 </div>
-<div class="sect2">
-<h3 id="_woops_8230">Woops&#8230;</h3>
+</div>
+<div class="sect1">
+<h2 id="_woops">Woops</h2>
+<div class="sectionbody">
 <p class="paragraph">So right now there&#8217;s a fix I made for a bug in RVM that I&#8217;m about to put in a pull request for. So now I&#8217;ll fake a mistake and commit it:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> vim scripts/cli
@@ -910,8 +913,10 @@ asciidoc.install();
 </pre></div></div></div>
 <p class="paragraph">Now it&#8217;s not only committed, but also pushed to the remote repository (which is once again an exclusive use fork). While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Fortunately this can be fixed.</p>
 </div>
-<div class="sect2">
-<h3 id="_git_magic">Git Magic</h3>
+</div>
+<div class="sect1">
+<h2 id="_git_magic">Git Magic</h2>
+<div class="sectionbody">
 <p class="paragraph">The first order of business is reverting the mistake:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">$</span> git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
@@ -1035,16 +1040,19 @@ commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
 </pre></div></div></div>
 <p class="paragraph">This effectively overwrites the remote repository&#8217;s history as well, merging the commits so that everything looks clean when the pull request is done.</p>
 </div>
-<div class="sect2">
-<h3 id="_conclusion">Conclusion</h3>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
 <p class="paragraph">While being a useful piece of functionality, <code>git rebase</code> should be used with caution when dealing with other people&#8217;s work. Consider it like proofreading a book, where someone edits paragraphs and sentence structure. Once the book goes out to customers, the proofreader wouldn&#8217;t visit customers in person to fix an issue they noticed after the fact. Instead they would most likely issue an errata (<code>git revert</code> or additional commits). <code>git rebase</code> works the same way, "proofreading" commits before publishing them to the public (or internally within an organization). It&#8217;s definitely a great tool to have in one&#8217;s git toolbox.</p>
+</div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-16 13:04:55 PDT
+Last updated 2013-03-21 22:50:12 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

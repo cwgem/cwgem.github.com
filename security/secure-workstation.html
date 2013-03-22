@@ -879,12 +879,15 @@ asciidoc.install();
 <p class="paragraph"><a href="/">Home</a></p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_introduction">Introduction</h3>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
 <p class="paragraph">For many companies the fear of a security breach can put great stress on those involved. With the recent <a href="http://www.facebook.com/notes/facebook-security/protecting-people-on-facebook/10151249208250766">Facebook breach due to employee laptops being compromised</a>, a plan came to mind on how to create a fairly secure workstation. Having some experience working on <a href="https://github.com/cwgem/catalyst-support">Grsecurity backed EC2 images</a>, I began the task of working on such a system.</p>
 </div>
-<div class="sect2">
-<h3 id="_distribution">Distribution</h3>
+</div>
+<div class="sect1">
+<h2 id="_distribution">Distribution</h2>
+<div class="sectionbody">
 <p class="paragraph">I chose Gentoo for my distribution of choice, primarily due to familiarity,and also due to the fact that the <a href="http://www.gentoo.org/proj/en/hardened/">Hardened Gentoo Project</a> puts a considerable amount of effort in supporting the security components of interest. For example, there is the hardened toolchain, which introduces technologies such as <a href="http://www.research.ibm.com/trl/projects/security/ssp/">stack smashing protector</a> and <a href="http://linuxfromscratch.xtra-net.org/hlfs/view/unstable/glibc-2.4/chapter02/pie.html">position independent code</a>. This helps with exploits that utilize buffer overflows or assumed memory addresses.</p>
 <p class="paragraph">However one caveat is that to gain the full benefit of the hardened toolchain, compiling becomes even more necessary than a standard Gentoo install. That means staying away from binaries of libreoffice, firefox, chromium, etc. In order to get around this, standardize hardware along with something close to the <a href="https://github.com/cwgem/catalyst-support">Gentoo catalyst build scripts</a> developed can serve as a binary package server to workstatons. This allows for secure, standard binaries customized to business needs and reducing the amount of IT support necessary.</p>
 <p class="paragraph">Since the hardened desktop profiles in Gentoo where deprecated, a custom profile was developed which merged the KDE desktop profile and the hardened profile. They were placed in a <code>/usr/local/portage</code> overlay with the following structure:</p>
@@ -903,8 +906,10 @@ asciidoc.install();
 </pre></div></div></div>
 <p class="paragraph">This easily combines the two profiles giving the benefits of the hardened toolchain, with the requirements for having a suitable KDE desktop. Finally the stable keyword branch of Gentoo was utilized to remain as solid as possible. The main exception to that was using a non-stable marked kernel and a few other required packages to be as up to date as possible and keep in line with the latest Grsecurity patches.</p>
 </div>
-<div class="sect2">
-<h3 id="_kernel">Kernel</h3>
+</div>
+<div class="sect1">
+<h2 id="_kernel">Kernel</h2>
+<div class="sectionbody">
 <p class="paragraph">The kernel used is  hardened-sources-3.7.8, which includes the <a href="http://grsecurity.net/">Grsecurity patchset</a>, as well as a few other security related patchsets. The importance of utilizing this patchset can be addressed by this quote from the project website:</p>
 <div class="quoteblock">
 <div class="content">
@@ -926,10 +931,12 @@ asciidoc.install();
 </div>
 <p class="paragraph">This allows for adjusting PaX headers on binaries like Skype, which don&#8217;t deal well with binary tampering.</p>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_notable_software">Notable Software</h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="_notable_software">Notable Software</h3>
-<div class="sect3">
-<h4 id="_the_list">The List</h4>
+<h3 id="_the_list">The List</h3>
 <p class="paragraph">Working at EngineYard I use a number of tools to help with various tasks. Of importance to this project was the following list of software:</p>
 <ul class="ulist">
 <li>
@@ -961,10 +968,10 @@ Irssi - Connect to IRC there is company work based around open source software, 
 </li>
 </ul>
 </div>
+<div class="sect2">
+<h3 id="_caveats">Caveats</h3>
 <div class="sect3">
-<h4 id="_caveats">Caveats</h4>
-<div class="sect4">
-<h5 id="_skype">Skype</h5>
+<h4 id="_skype">Skype</h4>
 <p class="paragraph">Skype has a binary tampering system which prevents flagging some security protections off so it works properly. While this is rather unfortunate Skype is an essential business tool. With that in mind it takes a few steps to get it running:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">#</span> mkdir -p /etc/portage/package.unmask
@@ -977,8 +984,8 @@ Irssi - Connect to IRC there is company work based around open source software, 
 </pre></div></div></div>
 <p class="paragraph">After this and some headset setup Skype worked without a hitch and showed no issues during two group meetings.</p>
 </div>
-<div class="sect4">
-<h5 id="_dropbox">DropBox</h5>
+<div class="sect3">
+<h4 id="_dropbox">DropBox</h4>
 <p class="paragraph">Same here with needing to disable protections. This was achieved through doing:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">#</span> emerge dropbox
@@ -986,8 +993,8 @@ Irssi - Connect to IRC there is company work based around open source software, 
 <span class="gp">#</span> paxctl -m /opt/dropbox/dropbox
 </pre></div></div></div>
 </div>
-<div class="sect4">
-<h5 id="_google_talk">Google Talk</h5>
+<div class="sect3">
+<h4 id="_google_talk">Google Talk</h4>
 <p class="paragraph">This needs to use the latest version to keep up with the Google download page:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="gp">#</span> <span class="nb">echo</span> <span class="s1">&#39;www-plugins/google-talkplugin&#39;</span> &gt;&gt; /etc/portage/package.keywords/googletalk
@@ -997,8 +1004,10 @@ Irssi - Connect to IRC there is company work based around open source software, 
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_home_directory_encryption">Home Directory Encryption</h3>
+</div>
+<div class="sect1">
+<h2 id="_home_directory_encryption">Home Directory Encryption</h2>
+<div class="sectionbody">
 <p class="paragraph">This was put off till the end in order to avoid dealing with too much trouble during setup. After much research I came to the conclusion that using <a href="http://www.arg0.net/encfs">encfs</a> would allow for a reasonable balance in having a secure system and time to setup. Everything that would contain personal documents was in <code>/home</code>, so the idea was to encrypt that alone and leave the rest of the system (freely available software) to its own. As this works with FUSE, support will need to be enabled in the kernel, and fuse (sys-fs/fuse) will need to be installed.</p>
 <p class="paragraph">First is to logout of the system entirely for all users. In this case there was only one user. Also X11 based login managers such as gdm, kdm, and xdm will all need to be shutdown. Next, have a root screen up to handle the administrative tasks, and be sure it isn&#8217;t in the <code>/home</code> directory somewhere. Now to create an encrypted location for <code>/home</code> to map to:</p>
 <div class="listingblock">
@@ -1035,8 +1044,10 @@ Please choose from one of the following options:
 </pre></div></div></div>
 <p class="paragraph">From there X11 should start without any issues.</p>
 </div>
-<div class="sect2">
-<h3 id="_conclusion">Conclusion</h3>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
 <p class="paragraph">Using this system I was able to confirm the following:</p>
 <ul class="ulist">
 <li>
@@ -1079,11 +1090,12 @@ Look into a CampFire desktop solution, with the web version currently being a su
 <p class="paragraph">I hope this guide shows that through even with the security provided through compile time and Grsecurity kernel protection, a reasonable workstation can be setup to provide practical usage. It will be interesting to see how these technologies will progress in the future to work towards further lessening the gap between security and usability.</p>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-16 13:04:55 PDT
+Last updated 2013-03-21 22:53:51 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

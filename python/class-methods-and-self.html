@@ -875,16 +875,19 @@ asciidoc.install();
 <span id="revdate">2013-02-06</span>
 </div>
 <div id="content">
-<div class="sect2">
-<h3 id="_introduction">Introduction</h3>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
 <p class="paragraph">For those who have learned object oriented programming through languages such
 as Java, the Python style of method may seem foreign. Instead of using
 keywords such as <code>this</code>, Python instead has a <code>self</code> argument that is passed in
 with each method. This article is meant to look at how <code>self</code> works and some
 of the logic behind it.</p>
 </div>
-<div class="sect2">
-<h3 id="_a_basic_method">A Basic Method</h3>
+</div>
+<div class="sect1">
+<h2 id="_a_basic_method">A Basic Method</h2>
+<div class="sectionbody">
 <p class="paragraph">A basic example of a method being called in a class is something like this:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
@@ -909,8 +912,10 @@ method which takes just <code>self</code> as an argument. However when they&#821
 there is no variable that is passed in for the self part of the argument.
 Where is it coming from?</p>
 </div>
-<div class="sect2">
-<h3 id="_the_hidden_self">The Hidden self</h3>
+</div>
+<div class="sect1">
+<h2 id="_the_hidden_self">The Hidden self</h2>
+<div class="sectionbody">
 <p class="paragraph">The answer to this lies within the python interpreter itself. In this case
 CPython will be used to show the logic. What&#8217;s happening in fact is that self
 is being passed in behind the scenes, as shown from <code>method_call</code> located in
@@ -992,15 +997,17 @@ the method:</p>
 </tr></table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_why">Why?</h3>
+</div>
+<div class="sect1">
+<h2 id="_why">Why?</h2>
+<div class="sectionbody">
 <p class="paragraph">The Python FAQ on design has a
 <a href="http://docs.python.org/2/faq/design.html#why-must-self-be-used-explicitly-in-method-definitions-and-calls">fairly
 detailed answer</a> on the topic. Much of the inspiration for this system was
 from <a href="http://en.wikipedia.org/wiki/Modula-3">Modula-3</a>. There are three main
 reasons given for why Python in particular decided to go with this system.</p>
-<div class="sect3">
-<h4 id="_instance_variables_vs_local_variables">Instance Variables vs Local Variables</h4>
+<div class="sect2">
+<h3 id="_instance_variables_vs_local_variables">Instance Variables vs Local Variables</h3>
 <p class="paragraph">Take for example the following code:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
@@ -1026,8 +1033,8 @@ re-used in the class somewhere else? It&#8217;s hard to tell with the later exam
 The first example however makes it explicit that the name will most likely be
 referenced somewhere in the class later.</p>
 </div>
-<div class="sect3">
-<h4 id="_base_classes_and_overrides">Base Classes and Overrides</h4>
+<div class="sect2">
+<h3 id="_base_classes_and_overrides">Base Classes and Overrides</h3>
 <p class="paragraph">For an example of this:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
@@ -1056,8 +1063,8 @@ base <code>Chris</code> class&#8217; <code>eatfood</code> method. This allows fo
 able to work with the inherited class and operate on its attributes and
 methods directly.</p>
 </div>
-<div class="sect3">
-<h4 id="_syntactic_assignment_issue">Syntactic Assignment Issue</h4>
+<div class="sect2">
+<h3 id="_syntactic_assignment_issue">Syntactic Assignment Issue</h3>
 <p class="paragraph">The final reason is more of a design explanation, so I&#8217;ll quote it here instead:</p>
 <div class="listingblock">
 <div class="content">
@@ -1065,8 +1072,10 @@ methods directly.</p>
 </div></div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_conclusion">Conclusion</h3>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
 <p class="paragraph">This in conclusion is the logic behind explicitly indicating <code>self</code> in a
 method argument, as well as using it within the method. The logic behind the
 scenes was also shown for those curious. Hopefully this will clear up why the
@@ -1074,11 +1083,12 @@ design decision was made and why it differs from languages such as Java and
 C++.</p>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-16 13:04:55 PDT
+Last updated 2013-03-21 22:51:42 PDT
 </div>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">
