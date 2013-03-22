@@ -1,0 +1,36 @@
+Google Reader's Bigger Problem
+==============================
+:Author: Chris White
+:Email: <cwprogram@live.com>
+:Date: 2013-03-22
+:Revision: 1.0
+
+== Introduction
+
+When it was announced that http://googleblog.blogspot.com/2013/03/a-second-spring-of-cleaning.html[Google Reader was going to go away], a lot of users were fairly displeased with the outcome. There were even claims so far as http://atlantablackstar.com/2013/03/16/death-of-google-reader-might-signal-impending-death-of-rss/[Google Reader's demise meaning the end of RSS]. RSS though, and the reaction to Google Reader's demise, is pointing to a larger issue of information overload.
+
+== Getting Information On The Net
+
+So a user needs to get some information, let's say about Ruby programming. Well, first they have the entire Internet before them. That's a huge problem which lead to the creation of search engines. These search engines would go through as much of the content on the web and index it for users. The user can then enter search terms, such as "Ruby Programming" and get results back related to those terms.
+
+This now becomes the user's entry point into the particular topic in question. A single result can branch out into multiple web pages, multiple web sites. These pages and sites themselves turn into even more web pages and web sites. At this point the user is in the discovery phase. However they're also in a bit of a spot, as search terms are no longer the primary method of navigation. They might attempt to try different search terms to see if the page comes up in the results, but it turns out there's a better way.
+
+== Organizing The Personal Net
+
+Enter bookmarks, a way to keep track of visited pages for later references. The usage of bookmarks can be something as sparse as a few commonly used links, or as complex as a tree of folders and subfolders of different categories. The user employs this as a way to keep a customized library of all the sites they feel are of value to them. Users with multiple browsers may work with an online solution such as https://delicious.com/[delicious] to keep resources in a centralized location. However such solutions have an issue, which is that they don't let the user know when content is updated.
+
+== Keeping Track of The Personal Net
+
+This is where technologies such as RSS, used by services and programs like Google Reader come in. For sites which provide an appropriate feed, the user is able to subscribe to changes and make sure to keep up to date on sites they've collected. Google Reader provided a way to customize this collection and allow the user to organize these feeds. It was a way to help organize the information overload.
+
+== Then The Panic
+
+So Google announces that Google Reader is going away. Suddenly people are upset and panicking begins to occur. What happened? People are losing a way to handle the information overload. They suddenly start looking for alternatives, some even https://twitter.com/briancamba/status/313083545801342977[gladly willing to pay to keep Google Reader]. There will be a certain amount of pain involved as users migrate their collection over to an appropriate site, making sure they can categorize feeds according to their needs.
+
+== Google's Social Is Not The Solution
+
+In the end the demise of Google Reader had strong ties with http://www.quora.com/Google-Reader-Shut-Down-March-2013/Why-is-Google-killing-Google-Reader[the rise of social networking within Google]. However social is more of a problem than a solution. The reason is that social is backed by content creation, which is the root cause of information overload. While users may receive shared content from individuals they are following of related interests, the individuals they are following may create content that is not. Filtering of this dynamic content becomes increasingly more difficult as the number of individuals followed increases. The other issue is that much of this organization burden falls on the user, who should be focusing on organization of more refined content stream.
+
+== Conclusion
+
+As the Internet increases in content, so will the information overload problem. In this ever-growing world of content creation I believe our focus should be more on content organization and filtering, versus the creation of more content. In particular sites with category based organization such as http://www.reddit.com/[Reddit] with its subreddit structure are examples of fitting these needs. The main benefit I see in a site such as Reddit is that content is crowd categorized, with different specificity (/r/programming versus /r/ruby) that alleviates the burden on the user. Such sites will help in conquering the overwhelming information overload and making it easier for users to access information on the expansive Internet.
