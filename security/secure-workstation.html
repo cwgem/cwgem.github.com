@@ -48,12 +48,9 @@
 <p class="paragraph">This easily combines the two profiles giving the benefits of the hardened toolchain, with the requirements for having a suitable KDE desktop. Finally the stable keyword branch of Gentoo was utilized to remain as solid as possible. The main exception to that was using a non-stable marked kernel and a few other required packages to be as up to date as possible and keep in line with the latest Grsecurity patches.</p>
 <h2 id="_kernel" class="sect1">Kernel</h2>
 <p class="paragraph">The kernel used is  hardened-sources-3.7.8, which includes the <a href="http://grsecurity.net/">Grsecurity patchset</a>, as well as a few other security related patchsets. The importance of utilizing this patchset can be addressed by this quote from the project website:</p>
-<div class="quoteblock">
-<div class="content">
-<p class="paragraph">Unlike other expensive security "solutions" that pretend to achieve security through known-vulnerability patching, signature-based detection, or other reactive methods, grsecurity provides real proactive security. The only solution that hardens both your applications and operating system, Grsecurity is essential for public-facing servers and shared-hosting environments.</p>
-</div>
-<div class="attribution">
-</div></div>
+<blockquote>
+Unlike other expensive security "solutions" that pretend to achieve security through known-vulnerability patching, signature-based detection, or other reactive methods, grsecurity provides real proactive security. The only solution that hardens both your applications and operating system, Grsecurity is essential for public-facing servers and shared-hosting environments.
+</blockquote>
 <p class="paragraph">While keeping the system up to date is important, it&#8217;s often hard to keep up with complete accuracy. Grsecurity comes in by providing protection against common attack vectors that most exploits utilize. Configuring Grsecurity in the kernel is incredibly easy, and can be achieved by simply using auto configuration and setting to Desktop accordingly:</p>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>[*] GRsecurity
@@ -220,7 +217,7 @@ Look into a CampFire desktop solution, with the web version currently being a su
 </div>
 <div id="footer">
 <p id="footer-text">
-Last updated 2013-03-24 18:51:31 PDT
+Last updated 2013-03-24 21:24:27 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

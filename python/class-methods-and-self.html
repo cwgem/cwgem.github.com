@@ -198,7 +198,9 @@ able to work with the inherited class and operate on its attributes and
 methods directly.</p>
 <h3 id="_syntactic_assignment_issue" class="sect2">Syntactic Assignment Issue</h3>
 <p class="paragraph">The final reason is more of a design explanation, so I&#8217;ll quote it here instead:</p>
-<pre class="listingblock"><code>Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.</code></pre>
+<blockquote>
+Finally, for instance variables it solves a syntactic problem with assignment: since local variables in Python are (by definition!) those variables to which a value is assigned in a function body (and that aren’t explicitly declared global), there has to be some way to tell the interpreter that an assignment was meant to assign to an instance variable instead of to a local variable, and it should preferably be syntactic (for efficiency reasons). C++ does this through declarations, but Python doesn’t have declarations and it would be a pity having to introduce them just for this purpose. Using the explicit self.var solves this nicely. Similarly, for using instance variables, having to write self.var means that references to unqualified names inside a method don’t have to search the instance’s directories. To put it another way, local variables and instance variables live in two different namespaces, and you need to tell Python which namespace to use.
+</blockquote>
 <h2 id="_conclusion" class="sect1">Conclusion</h2>
 <p class="paragraph">This in conclusion is the logic behind explicitly indicating <code>self</code> in a
 method argument, as well as using it within the method. The logic behind the
@@ -209,7 +211,7 @@ C++.</p>
 <div id="footer">
 <p id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-24 18:48:28 PDT
+Last updated 2013-03-24 21:29:58 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">
