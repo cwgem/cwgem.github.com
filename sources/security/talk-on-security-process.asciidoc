@@ -1,9 +1,8 @@
 A Talk On Security Process
 ==========================
-Chris White<cwprogram@live.com>
-v1.0, Wed Feb 13 18:48:34 PST 2013
-
-link:/[Home]
+:Author: Chris White
+:Email: <cwprogram@live.com>
+:Date: Wed Feb 13 18:48:34 PST 2013
 
 == Disclaimer
 
