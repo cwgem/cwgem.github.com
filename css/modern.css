@@ -29,8 +29,7 @@ strong {
 
 #container {
   min-height: 100%;
-  /* background-color: rgb(122, 122, 122); */
-  background-color: rgb(101, 122, 124);
+  background-color: #535155;
 }
 
 /* Percent span layout with auto-centering */
@@ -58,7 +57,7 @@ strong {
 }
 
 #header, #footer {
-  background-color: rgb(200, 197, 182);
+  background-color: rgb(179, 188, 202);
   color: rgb(1, 34, 28);
   padding: 15px;
 }
@@ -89,7 +88,7 @@ h1 {
   text-align: center;
 }
 h2 {
-  color: rgb(129, 103, 84);
+  color: rgb(128, 75, 37);
   font-size: 1.5em;
   padding-bottom: 0.5em;
   padding-top: 0.5em;
