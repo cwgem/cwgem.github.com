@@ -1,6 +1,8 @@
 Articles
 ========
 
+== Introduction
+
 These are a list of articles I've written on various topics. They are generated with AsciiDoc and edited with Emacs using adoc-mode. 
 
 === Security
