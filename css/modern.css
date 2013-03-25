@@ -67,7 +67,7 @@ pre {
   padding-right: 1em;
   padding-left: 1em;
   border: 1px dotted black;
-  overflow: auto;
+  overflow: scroll;
 }
 
 p.postinfo {
