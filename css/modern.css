@@ -48,13 +48,7 @@ strong {
   padding-top: 0.7em;
 }
 
-#content { 
-  padding-top: 15px;
-  padding-bottom: 25px;
-  padding-right: 5em;
-  padding-left: 5em;
-  clear: both;
-}
+
 
 #header, #footer {
   background-color: rgb(179, 188, 202);

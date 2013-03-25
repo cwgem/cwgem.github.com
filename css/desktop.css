@@ -7,3 +7,11 @@
   font-family: Helvetica, Arial, Sans-Serif;
   background-color: white;
 }
+
+#content { 
+  padding-top: 15px;
+  padding-bottom: 25px;
+  padding-right: 5em;
+  padding-left: 5em;
+  clear: both;
+}
