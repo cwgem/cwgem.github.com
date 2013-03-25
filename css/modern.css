@@ -23,6 +23,10 @@ thead, p.table.header,
   font-family: Garmond, Georgia, serif;
 }
 
+strong {
+  font-weight: bold;
+}
+
 #container {
   min-height: 100%;
   /* background-color: rgb(122, 122, 122); */
