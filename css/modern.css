@@ -142,3 +142,25 @@ a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
   border: none;
   border-bottom: 1px dotted white;
 }
+
+blockquote {
+  font-family: Georgia, serif;
+  font-size: 1.2em;
+  font-style: italic;
+  margin-left: 1.5em;
+  padding-left: 1.5em;
+  padding-right: 2em;
+  line-height: 1.45;
+  position: relative;
+  color: #383838;
+}
+
+blockquote:before {
+  display: block;
+  content: "\201C";
+  font-size: 80px;
+  position: absolute;
+  left: -20px;
+  top: -20px;
+  color: #7a7a7a;
+}
