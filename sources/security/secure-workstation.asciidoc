@@ -94,7 +94,7 @@ Working at EngineYard I use a number of tools to help with various tasks. Of imp
 
 Skype has a binary tampering system which prevents flagging some security protections off so it works properly. While this is rather unfortunate Skype is an essential business tool. With that in mind it takes a few steps to get it running:
 
-[source,console]
+[source,text]
 ----
 # mkdir -p /etc/portage/package.unmask
 # mkdir -p /etc/portage/package.license
@@ -111,7 +111,7 @@ After this and some headset setup Skype worked without a hitch and showed no iss
 
 Same here with needing to disable protections. This was achieved through doing:
 
-[source,console]
+[source,text]
 ----
 # emerge dropbox
 # paxctl -c /opt/dropbox/dropbox
@@ -122,7 +122,7 @@ Same here with needing to disable protections. This was achieved through doing:
 
 This needs to use the latest version to keep up with the Google download page:
 
-[source,console]
+[source,text]
 ----
 # echo 'www-plugins/google-talkplugin' >> /etc/portage/package.keywords/googletalk
 # echo '=www-plugins/google-talkplugin-3.13.2.0 Google-TOS' >> /etc/portage/package.license/googletalk
@@ -136,7 +136,7 @@ This was put off till the end in order to avoid dealing with too much trouble du
 
 First is to logout of the system entirely for all users. In this case there was only one user. Also X11 based login managers such as gdm, kdm, and xdm will all need to be shutdown. Next, have a root screen up to handle the administrative tasks, and be sure it isn't in the `/home` directory somewhere. Now to create an encrypted location for `/home` to map to:
 
-[source,console]
+[source,text]
 ----
 # mv /home /home.orig
 # mkdir /home /home.enc
@@ -157,7 +157,7 @@ Please choose from one of the following options:
 
 Here standard mode was selected by simply pressing enter. This provides a reasonable balance between security an performance for a desktop system. After selection of the security mode, a prompt will appear to set the key for encryption. Enter the password and remember, if you lose it your home data will no longer be accessible in plain form. It's recommended to back up the data to a tarball somewhere, and then use gpg encryption to secure it:
 
-[source,console]
+[source,text]
 ----
 # tar cjpvf /backup/someplace/home-backup.tar.bz2 /home.orig
 # gpg -c /backup/someplace/home-backup.tar.bz2
@@ -165,19 +165,21 @@ Here standard mode was selected by simply pressing enter. This provides a reason
 
 Later backups can be retrieved by running:
 
-[source,console]
+[source,text]
 # gpg /backup/someplace/home-backup.tar.bz2.gpg
 
 Which will prompt for the password used to protect the file, and decrypt if it was successfully entered. Now it's time to encrypt the home data by simply copying the old data to the new encrypted home:
 
-[source,console]
+[source,text]
 ----
 # rsync -a --progress /home.orig/ /home/
 ----
 
+WARNING: You don't need to do this if you use a desktop login system like `xdm`
+
 One final step for X11 users is to get around an issue with the Xauthority file not locking properly. The following snippet can be added to the user shell's rc file (`~/.bashrc` for example):
 
-[source,console]
+[source,text]
 ----
 export XAUTHORITY=/tmp/.Xauthority-$USER
 export ICEAUTHORITY=/tmp/.ICEauthority-$USER

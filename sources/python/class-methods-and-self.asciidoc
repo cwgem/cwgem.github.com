@@ -15,7 +15,7 @@ of the logic behind it.
 
 A basic example of a method being called in a class is something like this:
 
-[source,python]
+[source,text]
 ----
 #!/bin/python
 
@@ -49,7 +49,7 @@ is being passed in behind the scenes, as shown from `method_call` located in
 `Objects/classobject.c` in the Python source tree. The code listing for
 `method_call` is as follows:
 
-[source,c]
+[source,text]
 ----
 static PyObject *
 method_call(PyObject *func, PyObject *arg, PyObject *kw)
@@ -87,7 +87,7 @@ There's quite a bit of C code here, but only a few parts need to be focused
 on. First the code attempts to get `self` by looking at what called the
 method. If nothing comes back, Python throws an error:
 
-[source,c]
+[source,text]
 ----
     PyObject *self = PyMethod_GET_SELF(func);
     PyObject *result;
@@ -102,7 +102,7 @@ method. If nothing comes back, Python throws an error:
 Next it resizes the argument array, adding one to the length in order to
 accommodate `self` being passed in:
 
-[source,c]
+[source,text]
 ----
         Py_ssize_t argcount = PyTuple_Size(arg);
         PyObject *newarg = PyTuple_New(argcount + 1);
@@ -111,7 +111,7 @@ accommodate `self` being passed in:
 Then it shifts in self as the first argument, adding the other arguments at
 the end:
 
-[source,c]
+[source,text]
 ----
         PyTuple_SET_ITEM(newarg, 0, self);
         for (i = 0; i < argcount; i++) {
@@ -125,7 +125,7 @@ the end:
 Finally the method is now called with self and the other arguments passed into
 the method:
 
-[source,c]
+[source,text]
   result = PyObject_Call((PyObject *)func, arg, kw);
 
 NOTE: The references to *REF in the code is for Python's garbage collection system, which uses http://arctrix.com/nas/python/gc/[reference counting]
@@ -142,7 +142,7 @@ reasons given for why Python in particular decided to go with this system.
 
 Take for example the following code:
 
-[source,python]
+[source,text]
 ----
 class Person:
 
@@ -157,7 +157,7 @@ myself.setname("Chris", "White")
 
 Now take away the `self`:
 
-[source,python]
+[source,text]
 ----
 class Person:
 
@@ -175,7 +175,7 @@ referenced somewhere in the class later.
 
 For an example of this:
 
-[source,python]
+[source,text]
 ----
 #!/bin/python
 

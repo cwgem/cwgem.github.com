@@ -14,7 +14,7 @@ WARNING: This article utilizes `git push --force` which I've link:/git/git-force
 
 So right now there's a fix I made for a bug in RVM that I'm about to put in a pull request for. So now I'll fake a mistake and commit it:
 
-[source,console]
+[source,text]
 ----
 $ vim scripts/cli
 $ git add scripts/cli
@@ -36,7 +36,7 @@ Now it's not only committed, but also pushed to the remote repository (which is 
 
 The first order of business is reverting the mistake:
 
-[source,console]
+[source,text]
 ----
 $ git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
 [ruby-reinstall 67b8cf6] Revert "This is a mistake"
@@ -71,7 +71,7 @@ Date:   Tue Feb 19 19:54:54 2013 -0800
 
 This would be annoying for the person on the other side of the pull request to review. That's where `git rebase` comes in handy. In this case `git rebase` will be started by what's called interactive mode. Interactive mode uses `$EDITOR` to handle history adjustments:
 
-[source,console]
+[source,text]
 $ git rebase -i HEAD~3 # work with all commits starting from 3 commits up to HEAD
 
 [source,text]
@@ -136,7 +136,7 @@ Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
 
 This results in the final commit message:
 
-[source,console]
+[source,text]
 ----
 $ git rebase -i HEAD~3
 [detached HEAD b3d43f3] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
@@ -165,7 +165,7 @@ That's it. Now all that's left is a single commit with a fixed commit message al
 [NOTE]
 As the remote server will question the edits for integrity purposes, `--force` *must* be used
 
-[source,console]
+[source,text]
 ----
 $ git push origin ruby-reinstall --force
 Counting objects: 7, done.
