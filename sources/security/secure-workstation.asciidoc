@@ -1,9 +1,8 @@
 The Secure Workstation
 ======================
-Chris White<cwhite@engineyard.com>
-v1.0, Tue Feb 19 PST 2013
-
-link:/[Home]
+:Author: Chris White
+:Email: <cwhite@engineyard.com>
+:Date: Tue Feb 19 PST 2013
 
 == Introduction
 
@@ -48,11 +47,28 @@ ____
 
 While keeping the system up to date is important, it's often hard to keep up with complete accuracy. Grsecurity comes in by providing protection against common attack vectors that most exploits utilize. Configuring Grsecurity in the kernel is incredibly easy, and can be achieved by simply using auto configuration and setting to Desktop accordingly:
 
-image::/images/grescurity-setup.png[Grsecurity Setup]
+[source,text]
+----
+[*] GRsecurity
+   Configuration Method ( Automatic ) --->
+   Usage Type (Desktop) --->
+   Virtualization Type (None) --->
+   Required Priorities (Performance ---->
+   Default Special Groups --->
+   Customize Configuration --->
+----
 
 Here performance was emphasized as the workstation is often utilized for compile work, and as such becomes an important factor. The file system settings are also important, in this case using ext4. It's okay to go with another file system instead, but it's recommend to enable extended attributes:
 
-image::/images/ext4-setup.png[Extended attributes enabled in ext4]
+
+[source,text]
+----
+<*> The Extended 4 (ext4) filesystem
+-*-     Ext4 extended attributes
+[*]          Ext4 POSIX Access Control Lists
+[*]          Ext4 Security Labels
+[ ]          EXT4 debugging support
+----
 
 This allows for adjusting PaX headers on binaries like Skype, which don't deal well with binary tampering.
 

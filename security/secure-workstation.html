@@ -16,6 +16,7 @@
 <div id="wrapper">
 <div id="header">
 <h1>The Secure Workstation</h1>
+<p class="postinfo">Posted by <a href="mailto:&lt;cwhite@engineyard.com&gt;">Chris White</a> on Tue Feb 19 PST 2013</p>
 </div>
 <div id="menu">
 <ul>
@@ -25,11 +26,6 @@
 </ul>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
-<p class="paragraph"><a href="/">Home</a></p>
-</div>
-</div>
 <h2 id="_introduction" class="sect1">Introduction</h2>
 <p class="paragraph">For many companies the fear of a security breach can put great stress on those involved. With the recent <a href="http://www.facebook.com/notes/facebook-security/protecting-people-on-facebook/10151249208250766">Facebook breach due to employee laptops being compromised</a>, a plan came to mind on how to create a fairly secure workstation. Having some experience working on <a href="https://github.com/cwgem/catalyst-support">Grsecurity backed EC2 images</a>, I began the task of working on such a system.</p>
 <h2 id="_distribution" class="sect1">Distribution</h2>
@@ -59,17 +55,23 @@
 <div class="attribution">
 </div></div>
 <p class="paragraph">While keeping the system up to date is important, it&#8217;s often hard to keep up with complete accuracy. Grsecurity comes in by providing protection against common attack vectors that most exploits utilize. Configuring Grsecurity in the kernel is incredibly easy, and can be achieved by simply using auto configuration and setting to Desktop accordingly:</p>
-<div class="imageblock">
-<div class="content">
-<img src="/images/grescurity-setup.png" alt="Grsecurity Setup" />
-</div>
-</div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>[*] GRsecurity
+   Configuration Method ( Automatic ) ---&gt;
+   Usage Type (Desktop) ---&gt;
+   Virtualization Type (None) ---&gt;
+   Required Priorities (Performance ----&gt;
+   Default Special Groups ---&gt;
+   Customize Configuration ---&gt;
+</pre></div></div></div>
 <p class="paragraph">Here performance was emphasized as the workstation is often utilized for compile work, and as such becomes an important factor. The file system settings are also important, in this case using ext4. It&#8217;s okay to go with another file system instead, but it&#8217;s recommend to enable extended attributes:</p>
-<div class="imageblock">
-<div class="content">
-<img src="/images/ext4-setup.png" alt="Extended attributes enabled in ext4" />
-</div>
-</div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>&lt;*&gt; The Extended 4 (ext4) filesystem
+-*-     Ext4 extended attributes
+[*]          Ext4 POSIX Access Control Lists
+[*]          Ext4 Security Labels
+[ ]          EXT4 debugging support
+</pre></div></div></div>
 <p class="paragraph">This allows for adjusting PaX headers on binaries like Skype, which don&#8217;t deal well with binary tampering.</p>
 <h2 id="_notable_software" class="sect1">Notable Software</h2>
 <h3 id="_the_list" class="sect2">The List</h3>
@@ -210,8 +212,7 @@ Look into a CampFire desktop solution, with the web version currently being a su
 </div>
 <div id="footer">
 <p id="footer-text">
-Version 1.0<br />
-Last updated 2013-03-21 22:53:51 PDT
+Last updated 2013-03-24 18:30:25 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">
