@@ -1,0 +1,140 @@
+html {
+  font-size: 100%; /* IE hack */ 
+}
+
+body {
+  /* IE5/Win */
+  text-align:center;
+  font-size: 0.75em;
+  color: rgb(51, 51, 51);
+}
+
+html, body {
+  height: 100%;
+}
+
+/* Title font. */ 
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Garmond, Georgia, serif;
+}
+
+#container {
+  min-height: 100%;
+  /* background-color: rgb(122, 122, 122); */
+  background-color: grey;
+}
+
+/* Percent span layout with auto-centering */
+#wrapper {
+  margin: 0 auto;
+  width: 900px;
+  text-align: left;
+  font-size: 1.2em;
+  font-family: Garmond, Georgia, serif;
+  background-color: white;
+}
+
+#wrapper p {
+  line-height: 1.5em;
+  padding-bottom: 0.7em;
+  padding-top: 0.7em;
+}
+
+#content { 
+  padding-top: 15px;
+  padding-bottom: 25px;
+  padding-right: 5em;
+  padding-left: 5em;
+  clear: both;
+}
+
+#header, #footer {
+  background-color: rgb(182, 200, 197);
+  color: rgb(1, 34, 28);
+  padding: 15px;
+}
+
+#footer {
+  text-align: right;
+}
+
+
+pre {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-right: 1em;
+  padding-left: 1em;
+  border: 1px dotted black;
+}
+
+p.postinfo {
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+}
+
+/* Title attributes */
+h1 {
+  font-size: 2em;  /* displayed at 24px */
+  text-align: center;
+}
+h2 {
+  color: rgb(129, 103, 84);
+  font-size: 1.5em;
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
+  font-style: normal;
+} 
+h3 {
+  font-size: 1.25em; /* displayed at 15px */
+  font-weight: bold;
+}  
+h4 {
+  font-size: 1em; /* displayed at 12px */
+}
+
+h3,h4 {
+  padding-bottom: 0.3em;
+}
+
+#content ul {
+  line-height: 1.5em;
+  margin-left: 2em;
+  list-style-type: square;
+}
+
+#content li {
+  padding-bottom: 0.5em;
+}
+
+#menu {
+  background-color: rgb(78, 99, 96);
+}
+
+#menu ul {
+  list-style-type: none;
+  padding-top: 0.3em;
+  height: 2em;
+  color: white;
+}
+
+#menu li {
+  display: block;
+  float: left;
+  padding-left: 20px;
+}
+
+a { color: #004B6B; text-decoration: none; border-bottom: 1px dotted #004B6B; }
+a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
+
+#menu a, #menu a:visited {
+  color: white;
+  text-decoration: none;
+  border: none;
+  border-bottom: 1px dotted white;
+}
