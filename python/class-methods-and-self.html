@@ -35,18 +35,18 @@ of the logic behind it.</p>
 <h2 id="_a_basic_method" class="sect1">A Basic Method</h2>
 <p class="paragraph">A basic example of a method being called in a class is something like this:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
+<div class="content"><div class="highlight"><pre>#!/bin/python
 
-<span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+class Person:
+  def __init__(self,name):
+    self.name = name
 
-  <span class="k">def</span> <span class="nf">sayname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Your name is&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+  def sayname(self):
+    print(&quot;Your name is&quot;, self.name)
 
 
-<span class="n">myself</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s">&quot;Chris&quot;</span><span class="p">)</span>
-<span class="n">myself</span><span class="o">.</span><span class="n">sayname</span><span class="p">()</span>
+myself = Person(&quot;Chris&quot;)
+myself.sayname()
 </pre></div></div></div>
 <p class="paragraph">The output of this code is:</p>
 <div class="listingblock">
@@ -63,71 +63,71 @@ is being passed in behind the scenes, as shown from <code>method_call</code> loc
 <code>Objects/classobject.c</code> in the Python source tree. The code listing for
 <code>method_call</code> is as follows:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">static</span> <span class="n">PyObject</span> <span class="o">*</span>
-<span class="nf">method_call</span><span class="p">(</span><span class="n">PyObject</span> <span class="o">*</span><span class="n">func</span><span class="p">,</span> <span class="n">PyObject</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="n">PyObject</span> <span class="o">*</span><span class="n">kw</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">PyObject</span> <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">PyMethod_GET_SELF</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
-    <span class="n">PyObject</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+<div class="content"><div class="highlight"><pre>static PyObject *
+method_call(PyObject *func, PyObject *arg, PyObject *kw)
+{
+    PyObject *self = PyMethod_GET_SELF(func);
+    PyObject *result;
 
-    <span class="n">func</span> <span class="o">=</span> <span class="n">PyMethod_GET_FUNCTION</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">PyErr_BadInternalCall</span><span class="p">();</span>
-        <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">else</span> <span class="p">{</span>
-        <span class="n">Py_ssize_t</span> <span class="n">argcount</span> <span class="o">=</span> <span class="n">PyTuple_Size</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
-        <span class="n">PyObject</span> <span class="o">*</span><span class="n">newarg</span> <span class="o">=</span> <span class="n">PyTuple_New</span><span class="p">(</span><span class="n">argcount</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
-        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">newarg</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-        <span class="n">Py_INCREF</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
-        <span class="n">PyTuple_SET_ITEM</span><span class="p">(</span><span class="n">newarg</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argcount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">PyObject</span> <span class="o">*</span><span class="n">v</span> <span class="o">=</span> <span class="n">PyTuple_GET_ITEM</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-            <span class="n">Py_XINCREF</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
-            <span class="n">PyTuple_SET_ITEM</span><span class="p">(</span><span class="n">newarg</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="n">newarg</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">PyObject_Call</span><span class="p">((</span><span class="n">PyObject</span> <span class="o">*</span><span class="p">)</span><span class="n">func</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">kw</span><span class="p">);</span>
-    <span class="n">Py_DECREF</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
-    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-<span class="p">}</span>
+    func = PyMethod_GET_FUNCTION(func);
+    if (self == NULL) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
+    else {
+        Py_ssize_t argcount = PyTuple_Size(arg);
+        PyObject *newarg = PyTuple_New(argcount + 1);
+        int i;
+        if (newarg == NULL)
+            return NULL;
+        Py_INCREF(self);
+        PyTuple_SET_ITEM(newarg, 0, self);
+        for (i = 0; i &lt; argcount; i++) {
+            PyObject *v = PyTuple_GET_ITEM(arg, i);
+            Py_XINCREF(v);
+            PyTuple_SET_ITEM(newarg, i+1, v);
+        }
+        arg = newarg;
+    }
+    result = PyObject_Call((PyObject *)func, arg, kw);
+    Py_DECREF(arg);
+    return result;
+}
 </pre></div></div></div>
 <p class="paragraph">There&#8217;s quite a bit of C code here, but only a few parts need to be focused
 on. First the code attempts to get <code>self</code> by looking at what called the
 method. If nothing comes back, Python throws an error:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>    <span class="n">PyObject</span> <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">PyMethod_GET_SELF</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
-    <span class="n">PyObject</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+<div class="content"><div class="highlight"><pre>    PyObject *self = PyMethod_GET_SELF(func);
+    PyObject *result;
 
-    <span class="n">func</span> <span class="o">=</span> <span class="n">PyMethod_GET_FUNCTION</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">PyErr_BadInternalCall</span><span class="p">();</span>
-        <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-    <span class="p">}</span>
+    func = PyMethod_GET_FUNCTION(func);
+    if (self == NULL) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
 </pre></div></div></div>
 <p class="paragraph">Next it resizes the argument array, adding one to the length in order to
 accommodate <code>self</code> being passed in:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>        <span class="n">Py_ssize_t</span> <span class="n">argcount</span> <span class="o">=</span> <span class="n">PyTuple_Size</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
-        <span class="n">PyObject</span> <span class="o">*</span><span class="n">newarg</span> <span class="o">=</span> <span class="n">PyTuple_New</span><span class="p">(</span><span class="n">argcount</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+<div class="content"><div class="highlight"><pre>        Py_ssize_t argcount = PyTuple_Size(arg);
+        PyObject *newarg = PyTuple_New(argcount + 1);
 </pre></div></div></div>
 <p class="paragraph">Then it shifts in self as the first argument, adding the other arguments at
 the end:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>        <span class="n">PyTuple_SET_ITEM</span><span class="p">(</span><span class="n">newarg</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argcount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">PyObject</span> <span class="o">*</span><span class="n">v</span> <span class="o">=</span> <span class="n">PyTuple_GET_ITEM</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-            <span class="n">Py_XINCREF</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
-            <span class="n">PyTuple_SET_ITEM</span><span class="p">(</span><span class="n">newarg</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="n">newarg</span><span class="p">;</span>
+<div class="content"><div class="highlight"><pre>        PyTuple_SET_ITEM(newarg, 0, self);
+        for (i = 0; i &lt; argcount; i++) {
+            PyObject *v = PyTuple_GET_ITEM(arg, i);
+            Py_XINCREF(v);
+            PyTuple_SET_ITEM(newarg, i+1, v);
+        }
+        arg = newarg;
 </pre></div></div></div>
 <p class="paragraph">Finally the method is now called with self and the other arguments passed into
 the method:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="n">result</span> <span class="o">=</span> <span class="n">PyObject_Call</span><span class="p">((</span><span class="n">PyObject</span> <span class="o">*</span><span class="p">)</span><span class="n">func</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">kw</span><span class="p">);</span>
+<div class="content"><div class="highlight"><pre>result = PyObject_Call((PyObject *)func, arg, kw);
 </pre></div></div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -146,23 +146,23 @@ reasons given for why Python in particular decided to go with this system.</p>
 <h3 id="_instance_variables_vs_local_variables" class="sect2">Instance Variables vs Local Variables</h3>
 <p class="paragraph">Take for example the following code:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+<div class="content"><div class="highlight"><pre>class Person:
 
-  <span class="k">def</span> <span class="nf">setname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">firstname</span><span class="p">,</span><span class="n">lastname</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">firstname</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">lastname</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Name changed to&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+  def setname(self,firstname,lastname):
+    self.name = firstname + &quot; &quot; + lastname
+    print(&quot;Name changed to&quot;, self.name)
 
 
-<span class="n">myself</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
-<span class="n">myself</span><span class="o">.</span><span class="n">setname</span><span class="p">(</span><span class="s">&quot;Chris&quot;</span><span class="p">,</span> <span class="s">&quot;White&quot;</span><span class="p">)</span>
+myself = Person()
+myself.setname(&quot;Chris&quot;, &quot;White&quot;)
 </pre></div></div></div>
 <p class="paragraph">Now take away the <code>self</code>:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+<div class="content"><div class="highlight"><pre>class Person:
 
-  <span class="k">def</span> <span class="nf">setname</span><span class="p">(</span><span class="n">firstname</span><span class="p">,</span><span class="n">lastname</span><span class="p">):</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">firstname</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">lastname</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Name changed to&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+  def setname(firstname,lastname):
+    name = firstname + &quot; &quot; + lastname
+    print(&quot;Name changed to&quot;, name)
 </pre></div></div></div>
 <p class="paragraph">Is this just setting name temporarily for local use? Or is it going to be
 re-used in the class somewhere else? It&#8217;s hard to tell with the later example.
@@ -171,25 +171,25 @@ referenced somewhere in the class later.</p>
 <h3 id="_base_classes_and_overrides" class="sect2">Base Classes and Overrides</h3>
 <p class="paragraph">For an example of this:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="c">#!/bin/python</span>
+<div class="content"><div class="highlight"><pre>#!/bin/python
 
-<span class="k">class</span> <span class="nc">Chris</span><span class="p">:</span>
+class Chris:
 
-  <span class="k">def</span> <span class="nf">givefood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">food</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">food</span> <span class="o">=</span> <span class="n">food</span>
+  def givefood(self,food):
+    self.food = food
 
-  <span class="k">def</span> <span class="nf">eatfood</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Chris eats&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">food</span><span class="p">)</span>
+  def eatfood(self):
+    print(&quot;Chris eats&quot;, self.food)
 
-<span class="k">class</span> <span class="nc">AngryChris</span><span class="p">(</span><span class="n">Chris</span><span class="p">):</span>
+class AngryChris(Chris):
 
-  <span class="k">def</span> <span class="nf">eatfood</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="n">Chris</span><span class="o">.</span><span class="n">eatfood</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Then he storms off&quot;</span><span class="p">)</span>
+  def eatfood(self):
+    Chris.eatfood(self)
+    print(&quot;Then he storms off&quot;)
 
-<span class="n">myself</span> <span class="o">=</span> <span class="n">AngryChris</span><span class="p">()</span>
-<span class="n">myself</span><span class="o">.</span><span class="n">givefood</span><span class="p">(</span><span class="s">&quot;carrots&quot;</span><span class="p">)</span>
-<span class="n">myself</span><span class="o">.</span><span class="n">eatfood</span><span class="p">()</span>
+myself = AngryChris()
+myself.givefood(&quot;carrots&quot;)
+myself.eatfood()
 </pre></div></div></div>
 <p class="paragraph">Here there is a base class of &#8216;Chris` which is inherited by <code>AngryChris</code>. The
 method <code>eatfood</code> is overridden by the <code>AngryChris</code> class, but still calls the
@@ -209,7 +209,7 @@ C++.</p>
 <div id="footer">
 <p id="footer-text">
 Version 1.0<br />
-Last updated 2013-03-21 22:51:42 PDT
+Last updated 2013-03-24 18:48:28 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

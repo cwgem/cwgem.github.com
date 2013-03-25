@@ -43,26 +43,26 @@
 <h2 id="_woops" class="sect1">Woops</h2>
 <p class="paragraph">So right now there&#8217;s a fix I made for a bug in RVM that I&#8217;m about to put in a pull request for. So now I&#8217;ll fake a mistake and commit it:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">$</span> vim scripts/cli
-<span class="gp">$</span> git add scripts/cli
-<span class="gp">$</span> git commit -m <span class="s2">&quot;This is a mistake&quot;</span>
-<span class="go">[ruby-reinstall 618f439] This is a mistake</span>
-<span class="gp">$</span> git push origin ruby-reinstall
-<span class="go">Counting objects: 7, done.</span>
-<span class="go">Delta compression using up to 4 threads.</span>
-<span class="go">Compressing objects: 100% (4/4), done.</span>
-<span class="go">Writing objects: 100% (4/4), 364 bytes, done.</span>
-<span class="go">Total 4 (delta 3), reused 0 (delta 0)</span>
-<span class="go">To git@github.com:cwgem/rvm.git</span>
-<span class="go">   4994dd5..618f439  ruby-reinstall -&gt; ruby-reinstall</span>
+<div class="content"><div class="highlight"><pre>$ vim scripts/cli
+$ git add scripts/cli
+$ git commit -m &quot;This is a mistake&quot;
+[ruby-reinstall 618f439] This is a mistake
+$ git push origin ruby-reinstall
+Counting objects: 7, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 364 bytes, done.
+Total 4 (delta 3), reused 0 (delta 0)
+To git@github.com:cwgem/rvm.git
+   4994dd5..618f439  ruby-reinstall -&gt; ruby-reinstall
 </pre></div></div></div>
 <p class="paragraph">Now it&#8217;s not only committed, but also pushed to the remote repository (which is once again an exclusive use fork). While looking over the pull request I notice my horrible error. On top of that I look at the commit message and realize that I forgot to include the issue number. Fortunately this can be fixed.</p>
 <h2 id="_git_magic" class="sect1">Git Magic</h2>
 <p class="paragraph">The first order of business is reverting the mistake:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">$</span> git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
-<span class="go">[ruby-reinstall 67b8cf6] Revert &quot;This is a mistake&quot;</span>
-<span class="go"> 1 file changed, 1 insertion(+)</span>
+<div class="content"><div class="highlight"><pre>$ git revert 618f4398bfeea938a1b9878b9fcf419b94d85e6c
+[ruby-reinstall 67b8cf6] Revert &quot;This is a mistake&quot;
+ 1 file changed, 1 insertion(+)
 </pre></div></div></div>
 <p class="paragraph">But now looking at the logs:</p>
 <div class="listingblock">
@@ -89,7 +89,7 @@ Date:   Tue Feb 19 19:54:54 2013 -0800
 </pre></div></div></div>
 <p class="paragraph">This would be annoying for the person on the other side of the pull request to review. That&#8217;s where <code>git rebase</code> comes in handy. In this case <code>git rebase</code> will be started by what&#8217;s called interactive mode. Interactive mode uses <code>$EDITOR</code> to handle history adjustments:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">$</span> git rebase -i HEAD~3 <span class="c"># work with all commits starting from 3 commits up to HEAD</span>
+<div class="content"><div class="highlight"><pre>$ git rebase -i HEAD~3 # work with all commits starting from 3 commits up to HEAD
 </pre></div></div></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre>pick 4994dd5 Fixed rvm reinstall/remove ruby not working properly
@@ -142,12 +142,12 @@ fixup 67b8cf6 Revert &quot;This is a mistake&quot;
 </pre></div></div></div>
 <p class="paragraph">This results in the final commit message:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">$</span> git rebase -i HEAD~3
-<span class="go">[detached HEAD b3d43f3] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.</span>
-<span class="go"> 1 file changed, 8 insertions(+), 8 deletions(-)</span>
-<span class="go">[detached HEAD 0473035] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.</span>
-<span class="go"> 1 file changed, 8 insertions(+), 8 deletions(-)</span>
-<span class="go">Successfully rebased and updated refs/heads/ruby-reinstall.</span>
+<div class="content"><div class="highlight"><pre>$ git rebase -i HEAD~3
+[detached HEAD b3d43f3] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+[detached HEAD 0473035] Fixed rvm reinstall/remove ruby not working properly. Addresses issue #1550.
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+Successfully rebased and updated refs/heads/ruby-reinstall.
 </pre></div></div></div>
 <p class="paragraph">Just to be safe, verify with <code>git log</code>:</p>
 <div class="listingblock">
@@ -170,14 +170,14 @@ commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
 </tr></table>
 </div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">$</span> git push origin ruby-reinstall --force
-<span class="go">Counting objects: 7, done.</span>
-<span class="go">Delta compression using up to 4 threads.</span>
-<span class="go">Compressing objects: 100% (3/3), done.</span>
-<span class="go">Writing objects: 100% (4/4), 491 bytes, done.</span>
-<span class="go">Total 4 (delta 3), reused 1 (delta 1)</span>
-<span class="go">To git@github.com:cwgem/rvm.git</span>
-<span class="go"> + 618f439...0473035 ruby-reinstall -&gt; ruby-reinstall (forced update)</span>
+<div class="content"><div class="highlight"><pre>$ git push origin ruby-reinstall --force
+Counting objects: 7, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (4/4), 491 bytes, done.
+Total 4 (delta 3), reused 1 (delta 1)
+To git@github.com:cwgem/rvm.git
+ + 618f439...0473035 ruby-reinstall -&gt; ruby-reinstall (forced update)
 </pre></div></div></div>
 <p class="paragraph">This effectively overwrites the remote repository&#8217;s history as well, merging the commits so that everything looks clean when the pull request is done.</p>
 <h2 id="_conclusion" class="sect1">Conclusion</h2>
@@ -185,7 +185,7 @@ commit 39d46f9659fd846257b3f70cab8e9900e2d7accd
 </div>
 <div id="footer">
 <p id="footer-text">
-Last updated 2013-03-24 18:35:49 PDT
+Last updated 2013-03-24 18:49:15 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">

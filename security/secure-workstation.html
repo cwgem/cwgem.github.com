@@ -109,36 +109,36 @@ Irssi - Connect to IRC there is company work based around open source software, 
 <h4 id="_skype" class="sect3">Skype</h4>
 <p class="paragraph">Skype has a binary tampering system which prevents flagging some security protections off so it works properly. While this is rather unfortunate Skype is an essential business tool. With that in mind it takes a few steps to get it running:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> mkdir -p /etc/portage/package.unmask
-<span class="gp">#</span> mkdir -p /etc/portage/package.license
-<span class="gp">#</span> <span class="nb">echo</span> <span class="s1">&#39;=net-im/skype-4.1.0.20&#39;</span> &gt;&gt; /etc/portage/package.keywords/skype
-<span class="gp">#</span> <span class="nb">echo</span> <span class="s1">&#39;=net-im/skype-4.1.0.20 skype-4.0.0.7-copyright&#39;</span> &gt;&gt; /etc/portage/package.license/skype
-<span class="gp">#</span> emerge skype
-<span class="gp">#</span> paxctl -c /opt/bin/skype
-<span class="gp">#</span> paxctl -m /opt/bin/skype <span class="c"># disable MPROTECT so it actually runs</span>
+<div class="content"><div class="highlight"><pre># mkdir -p /etc/portage/package.unmask
+# mkdir -p /etc/portage/package.license
+# echo &#39;=net-im/skype-4.1.0.20&#39; &gt;&gt; /etc/portage/package.keywords/skype
+# echo &#39;=net-im/skype-4.1.0.20 skype-4.0.0.7-copyright&#39; &gt;&gt; /etc/portage/package.license/skype
+# emerge skype
+# paxctl -c /opt/bin/skype
+# paxctl -m /opt/bin/skype # disable MPROTECT so it actually runs
 </pre></div></div></div>
 <p class="paragraph">After this and some headset setup Skype worked without a hitch and showed no issues during two group meetings.</p>
 <h4 id="_dropbox" class="sect3">DropBox</h4>
 <p class="paragraph">Same here with needing to disable protections. This was achieved through doing:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> emerge dropbox
-<span class="gp">#</span> paxctl -c /opt/dropbox/dropbox
-<span class="gp">#</span> paxctl -m /opt/dropbox/dropbox
+<div class="content"><div class="highlight"><pre># emerge dropbox
+# paxctl -c /opt/dropbox/dropbox
+# paxctl -m /opt/dropbox/dropbox
 </pre></div></div></div>
 <h4 id="_google_talk" class="sect3">Google Talk</h4>
 <p class="paragraph">This needs to use the latest version to keep up with the Google download page:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> <span class="nb">echo</span> <span class="s1">&#39;www-plugins/google-talkplugin&#39;</span> &gt;&gt; /etc/portage/package.keywords/googletalk
-<span class="gp">#</span> <span class="nb">echo</span> <span class="s1">&#39;=www-plugins/google-talkplugin-3.13.2.0 Google-TOS&#39;</span> &gt;&gt; /etc/portage/package.license/googletalk
+<div class="content"><div class="highlight"><pre># echo &#39;www-plugins/google-talkplugin&#39; &gt;&gt; /etc/portage/package.keywords/googletalk
+# echo &#39;=www-plugins/google-talkplugin-3.13.2.0 Google-TOS&#39; &gt;&gt; /etc/portage/package.license/googletalk
 </pre></div></div></div>
 <p class="paragraph">That enables usage of Google Voice for phone calls in Chromium. Nothing had to be disabled for it protection wise to work.</p>
 <h2 id="_home_directory_encryption" class="sect1">Home Directory Encryption</h2>
 <p class="paragraph">This was put off till the end in order to avoid dealing with too much trouble during setup. After much research I came to the conclusion that using <a href="http://www.arg0.net/encfs">encfs</a> would allow for a reasonable balance in having a secure system and time to setup. Everything that would contain personal documents was in <code>/home</code>, so the idea was to encrypt that alone and leave the rest of the system (freely available software) to its own. As this works with FUSE, support will need to be enabled in the kernel, and fuse (sys-fs/fuse) will need to be installed.</p>
 <p class="paragraph">First is to logout of the system entirely for all users. In this case there was only one user. Also X11 based login managers such as gdm, kdm, and xdm will all need to be shutdown. Next, have a root screen up to handle the administrative tasks, and be sure it isn&#8217;t in the <code>/home</code> directory somewhere. Now to create an encrypted location for <code>/home</code> to map to:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> mv /home /home.orig
-<span class="gp">#</span> mkdir /home /home.enc
-<span class="gp">#</span> encfs --public /home.enc /home
+<div class="content"><div class="highlight"><pre># mv /home /home.orig
+# mkdir /home /home.enc
+# encfs --public /home.enc /home
 </pre></div></div></div>
 <p class="paragraph">This creates a directory, <code>/home.enc</code>, where all of the <code>/home</code> files will be in encrypted form. <code>/home</code> will become the unencrypted version when the proper key is given. From then on all files that go to <code>/home</code> are encrypted. <code>--public</code> was provided to make DropBox work properly, which will fail to run without it set. When first run, <code>encfs</code> will promopt:</p>
 <div class="listingblock">
@@ -151,21 +151,29 @@ Please choose from one of the following options:
 </pre></div></div></div>
 <p class="paragraph">Here standard mode was selected by simply pressing enter. This provides a reasonable balance between security an performance for a desktop system. After selection of the security mode, a prompt will appear to set the key for encryption. Enter the password and remember, if you lose it your home data will no longer be accessible in plain form. It&#8217;s recommended to back up the data to a tarball somewhere, and then use gpg encryption to secure it:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> tar cjpvf /backup/someplace/home-backup.tar.bz2 /home.orig
-<span class="gp">#</span> gpg -c /backup/someplace/home-backup.tar.bz2
+<div class="content"><div class="highlight"><pre># tar cjpvf /backup/someplace/home-backup.tar.bz2 /home.orig
+# gpg -c /backup/someplace/home-backup.tar.bz2
 </pre></div></div></div>
 <p class="paragraph">Later backups can be retrieved by running:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> gpg /backup/someplace/home-backup.tar.bz2.gpg
+<div class="content"><div class="highlight"><pre># gpg /backup/someplace/home-backup.tar.bz2.gpg
 </pre></div></div></div>
 <p class="paragraph">Which will prompt for the password used to protect the file, and decrypt if it was successfully entered. Now it&#8217;s time to encrypt the home data by simply copying the old data to the new encrypted home:</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="gp">#</span> rsync -a --progress /home.orig/ /home/
+<div class="content"><div class="highlight"><pre># rsync -a --progress /home.orig/ /home/
 </pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="/images/warning.png" alt="Warning" />
+</td>
+<td class="content">You don&#8217;t need to do this if you use a desktop login system like <code>xdm</code></td>
+</tr></table>
+</div>
 <p class="paragraph">One final step for X11 users is to get around an issue with the Xauthority file not locking properly. The following snippet can be added to the user shell&#8217;s rc file (<code>~/.bashrc</code> for example):</p>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="go">export XAUTHORITY=/tmp/.Xauthority-$USER</span>
-<span class="go">export ICEAUTHORITY=/tmp/.ICEauthority-$USER</span>
+<div class="content"><div class="highlight"><pre>export XAUTHORITY=/tmp/.Xauthority-$USER
+export ICEAUTHORITY=/tmp/.ICEauthority-$USER
 </pre></div></div></div>
 <p class="paragraph">From there X11 should start without any issues.</p>
 <h2 id="_conclusion" class="sect1">Conclusion</h2>
@@ -212,7 +220,7 @@ Look into a CampFire desktop solution, with the web version currently being a su
 </div>
 <div id="footer">
 <p id="footer-text">
-Last updated 2013-03-24 18:30:25 PDT
+Last updated 2013-03-24 18:51:31 PDT
 </p>
 <div id="footer-badges">
 <a href="http://validator.w3.org/check?uri=referer">
