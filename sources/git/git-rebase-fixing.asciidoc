@@ -1,9 +1,8 @@
 Git Rebase Fixing
 =================
-Chris White<cwhite@engineyard.com>
-v1.0, Tue Feb 19 PST 2013
-
-link:/[Home]
+:Author: Chris White
+:Email: <cwhite@engineyard.com>
+:Date: Tue Feb 19 PST 2013
 
 WARNING: This article utilizes `git push --force` which I've link:/git/git-force.html[discussed the use case of], so please make sure and read it to understand why I'm making an exception
 
