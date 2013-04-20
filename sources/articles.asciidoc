@@ -3,7 +3,7 @@ Articles
 
 == Introduction
 
-These are a list of articles I've written on various topics. They are generated with AsciiDoc and edited with Emacs using adoc-mode. 
+These are a list of articles I've written on various topics. They are generated with AsciiDoc and edited with Emacs using adoc-mode.
 
 === Security
 
@@ -24,3 +24,4 @@ These are a list of articles I've written on various topics. They are generated 
 
 * link:/society/racism-and-sexism.html[Racism and Sexism]
 * link:/society/google-readers-bigger-problem.html[Google Reader's Bigger Problem]
+* link:/society/society/revenge-and-the-fear-marketplace.html[Revenge and The Fear Marketplace]
