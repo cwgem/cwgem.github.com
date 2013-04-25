@@ -62,7 +62,7 @@ Number  Start     End       Size      File system  Name                  Flags
 Now to make a 300MB partition for `/boot` to live in:
 
 [source,text]
----
+----
 (parted) mkpart primary 125890MB 126190MB                                         
 (parted) print                                                            
 Model: ATA APPLE SSD SM512E (scsi)
@@ -76,12 +76,12 @@ Number  Start     End       Size      File system  Name                  Flags
  2      210MB     125240MB  125030MB               Macintosh HD
  3      125240MB  125890MB  650MB     hfs+         Recovery HD
  4      125890MB  126190MB  300MB                  primary
----
+----
 
 The value `125890MB` I got by looking at the end of the previous partition and using that as a start point. `300` was added to that to give me the end point of `126190MB`. Next is the space for the rest of the partition. This is going to be managed through LVM so it can just take up the rest of the space:
 
 [source,text]
----
+----
 (parted) mkpart primary 126190MB -1                              
 (parted) print                                                            
 Model: ATA APPLE SSD SM512E (scsi)
@@ -96,12 +96,12 @@ Number  Start     End       Size      File system  Name                  Flags
  3      125240MB  125890MB  650MB     hfs+         Recovery HD
  4      125890MB  126190MB  300MB                  primary
  5      126190MB  500277MB  374087MB               primary
----
+----
 
 The start value is the same logic as when setting up `/boot`. `-1` indicates that this partition should use the rest of the disk. Now to display the units in GB for easier viewing:
 
 [source,text]
----
+----
 (parted) unit GB                                                          
 (parted) print                                                            
 Model: ATA APPLE SSD SM512E (scsi)
@@ -116,35 +116,35 @@ Number  Start   End     Size    File system  Name                  Flags
  3      125GB   126GB   0.65GB  hfs+         Recovery HD
  4      126GB   126GB   0.30GB               primary
  5      126GB   500GB   374GB                primary
----
+----
 
 So we end up with a 300MB `/boot` and a 374GB partition to use for LVM setup. Now it's time for formatting. First off the `/boot` partition needs to be formatted ext2. First quit parted to write the partitions:
 
 [source,text]
----
+----
 (parted) quit
----
+----
 
 Now the actual formatting:
 
 [source,text]
----
+----
 # mkfs.ext2 /dev/sda4
----
+----
 
 == Crypto Setup ==
 
 Now to prepare the setup for crypto work. First off is clearing off data from the disk:
 
 [source,text]
----
+----
 # dd if=/dev/zero of=/dev/sda5 bs=100M
----
+----
 
 You can also use `/dev/urandom` for improved security, but it could possibly take around a few hours due to the fact that a random number has to be generated when polling it. This `/dev/zero` run took around 20 minutes to complete. Now for the actual crypto setup:
 
 [source,text]
----
+----
 # cryptsetup -y --cipher aes-cbc-essiv:sha256 --key-size 256 luksFormat /dev/sda5 
 
 WARNING!
@@ -154,15 +154,15 @@ This will overwrite data on /dev/sda5 irrevocably.
 Are you sure? (Type uppercase yes): YES
 Enter LUKS passphrase: 
 Verify passphrase:
----
+----
 
 This sets up encryption with a pass-phrase for the main encryption process. Now we need to map it to an unencrypted form that can be used for LVM setup:
 
 [source,text]
----
+----
 # cryptsetup luksOpen /dev/sda5 encrypt
 Enter passphrase for /dev/sda5:
----
+----
 
 This gives us a `/dev/mapper/encrypt` device to work with for the LVM setup.
 
@@ -171,39 +171,39 @@ This gives us a `/dev/mapper/encrypt` device to work with for the LVM setup.
 Now for the LVM part. First we create a physical volume, which takes the partition and makes it workable with LVM's more flexible volume layout system:
 
 [source,text]
----
+----
 # pvcreate /dev/mapper/encrypt 
   Physical volume "/dev/mapper/encrypt" successfully created
----
+----
 
 Now for a volume group, which works to make physical volumes to logical volumes (the actual mount points we want):
 
 [source,text]
----
+----
 # vgcreate crypt /dev/mapper/encrypt 
   Volume group "crypt" successfully created
----
+----
 
 Now for the actual layouts. First some swap which I'll just set as 5GB:
 
 [source,text]
----
+----
 # lvcreate -L5G -nswap crypt
   Logical volume "swap" created
----
+----
 
 The `-nswap` part is just a name for it. This ends up as a `/dev/mapper/crypt-swap` device node (volumegroup-logicalvolumename is the general format). Next is the root node, which I just use the rest of the partition for. If this was an actual server I'd probably break out various `/var/` directories to prevent log DoS (Denial of Service). However this is a workstation so I'll just leave it be as remaining space:
 
 [source,text]
----
+----
 # lvcreate -l100%FREE -nroot crypt
   Logical volume "root" created
----
+----
 
 Okay and now for the formatting. I tend to choose ext4 as my default so that gets formatted first:
 
 [source,text]
----
+----
 # mkfs.ext4 /dev/mapper/crypt-root 
 mke2fs 1.42 (29-Nov-2011)
 Filesystem label=
@@ -226,34 +226,34 @@ Allocating group tables: done
 Writing inode tables: done                            
 Creating journal (32768 blocks): done
 Writing superblocks and filesystem accounting information: done
----
+----
 
 Next is swap, enabling it once finished:
 
 [source,text]
----
+----
 # mkswap /dev/mapper/crypt-swap && swapon /dev/mapper/crypt-swap
----
+----
 
 Finally some size sanity checking by temporary mounting:
 
 [source,text]
----
+----
 # free   
              total       used       free     shared    buffers     cached
 Mem:      16336048     146872   16189176          0       8896      45364
 -/+ buffers/cache:      92612   16243436
 Swap:      5242876          0    5242876
----
+----
 
 Swap checks out okay.
 
 [source,text]
----
+----
 # df -h
 Filesystem              Size  Used Avail Use% Mounted on
 ...
 /dev/mapper/crypt-root  338G   67M  321G   1% /mnt/gentoo
----
+----
 
 And so does the root mount.
