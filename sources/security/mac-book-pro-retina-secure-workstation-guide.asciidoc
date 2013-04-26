@@ -439,6 +439,14 @@ Okay so everything looks good there. Now on to the kernel.
 
 == Kernel ==
 
+Before getting started, the timezone needs to be set so `uname` doesn't show weird output. I'm in Pacific Time so I set it up as follows:
+
+[source,text]
+----
+# cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+# echo 'America/Los_Angeles' > /etc/timezone
+----
+
 Everyone's favorite part of the setup: the kernel. This will section will focus on the kernel via specific parts necessary for the various hardware components of the MacBook Pro Retina as well a necessary for encrypted root. First off is getting the kernel sources. Gentoo has a Grsecurity patched kernel all setup that can be emerged:
 
 [source,text]
