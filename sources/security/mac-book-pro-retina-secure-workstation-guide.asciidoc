@@ -812,7 +812,7 @@ Security options  --->
 
 Basically automatic configuration is chosen with emphasis on performance and desktop usage. SELinux was also disabled as I plan to use RBAC instead.
 
-== Building The Kernel ==
+=== Building The Kernel ===
 
 First just to be safe after all that work:
 
@@ -829,3 +829,18 @@ I tend to do the kernel build as a one liner:
 ----
 
 The `make clean` ensure the build environment is clean before compiling (no objects laying around). `make -j8` does an 8 job parallel build since this is a corei7 system and I want the build to go quickly. `make modules_install` installs all the modules into `/lib/modules` so they can be loaded properly. Finally, `make install` installs the kernel image to `/boot`.
+
+=== Module Setup ===
+
+The only module I really load is for wifi:
+
+[source,text]
+----
+# echo 'modules="b43"' >> /etc/conf.d/modules
+----
+
+Everything else will get pulled in as part of the module dependency resolution process.
+
+== Basic Configuration ==
+
+
