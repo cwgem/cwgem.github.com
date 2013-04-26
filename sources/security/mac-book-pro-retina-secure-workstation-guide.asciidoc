@@ -454,7 +454,16 @@ Everyone's favorite part of the setup: the kernel. This will section will focus 
 # emerge sys-kernel/hardened-sources
 ----
 
-First off I used a patch that supports https://gist.github.com/cwgem/5464697[various CPU mtune options for modern processors]. It was ported from https://github.com/graysky2/kernel_gcc_patch[this repository]. An easy patching method is to download it to root and apply it from within the source tree:
+To get something annoying out of the way ahead of time, `udev` will cry unless this is enabled:
+
+[source,text]
+----
+Device Drivers  --->
+  Generic Driver Options  --->
+    [*] Maintain a devtmpfs filesystem to mount at /dev
+----
+
+Now then to continue I used a patch that supports https://gist.github.com/cwgem/5464697[various CPU mtune options for modern processors]. It was ported from https://github.com/graysky2/kernel_gcc_patch[this repository]. An easy patching method is to download it to root and apply it from within the source tree:
 
 [source,text]
 ----
