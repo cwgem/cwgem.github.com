@@ -257,3 +257,558 @@ Filesystem              Size  Used Avail Use% Mounted on
 ----
 
 And so does the root mount.
+
+== Stages ==
+
+The stage I use is the hardened stage, which has already been pre-compiled with the hardened toolchain. It can be found on http://www.gentoo.org/main/en/mirrors2.xml[one of the mirrors] under the directory `/releases/amd64/current-stage3/hardened/`. Now to download it to the chroot directory:
+
+[source,text]
+----
+# cd /mnt/gentoo
+# wget http://gentoo.mirrors.pair.com/releases/amd64/current-stage3/hardened/20130418/stage3-amd64-hardened-20130418.tar.bz2
+----
+
+Just to be safe, verify the SHA hash of the tarball:
+
+[source,text]
+----
+# wget http://gentoo.mirrors.pair.com/releases/amd64/current-stage3/hardened/20130418/stage3-amd64-hardened-20130418.tar.bz2.DIGESTS.asc
+# openssl dgst -r -sha512 stage3-amd64-hardened-20130418.tar.bz2
+55c3483d1a9b86ed5805bbc44ee15274b6a57269a4bc9229b11017f6525d6ffdc6c8ee6b8c151ccb63c1a482e3f73a8d0dea10c9a5300786f0d20b347206588c *stage3-amd64-hardened-20130418.tar.bz2
+# cat stage3-amd64-hardened-20130418.tar.bz2.DIGESTS.asc
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+# SHA512 HASH
+55c3483d1a9b86ed5805bbc44ee15274b6a57269a4bc9229b11017f6525d6ffdc6c8ee6b8c151ccb63c1a482e3f73a8d0dea10c9a5300786f0d20b347206588c  stage3-amd64-hardened-20130418.tar.bz2
+....
+----
+
+Everything checks out there so time to extract the tarball. Be sure to use the exact options for extraction so the tarball ends up with proper permissions:
+
+[source,text]
+----
+
+----
+
+== chroot Prep ==
+
+Now it's time to edit the `make.conf` file. This can be done with:
+
+[source,text]
+----
+# nano -w /mnt/gentoo/etc/portage/make.conf
+----
+
+[WARNING]
+Beware, the location changed! Older Gentoo versions had it in `/etc/make.conf`
+
+My `/etc/portage/make.conf` ended up looking like this (comments inline explaining):
+
+[source,text]
+----
+# Only thing really different from the default is the 
+# -march=corei7 bit
+CFLAGS="-O2 -march=corei7 -pipe"
+CXXFLAGS="${CFLAGS}"
+CHOST="x86_64-pc-linux-gnu"
+
+# I decided to keep with the latest version of 
+# stuff a lot, so I'm going with the unstable
+# keyword route. For a *production* workstation 
+# this should be deleted to maintain stable
+# keywords.
+ACCEPT_KEYWORDS="~amd64"
+
+# smp - Multi core support
+# fuse - Good for tools like encfs
+# xinerama - For *painless* dual monitor setups
+# alsa - Alsa sound support
+# Everything else is customized stuff that may or may not apply to you
+# Most of the gnome related stuff will come from the profile
+USE="gstreamer erlang ruby smp ffmpeg theora vpx vim-syntax cjk -sdl fuse xinerama alsa"
+
+# Weeee Core i7
+MAKEOPTS="-j8"
+
+# This is for a custom profile that mixes hardened with gnome 
+PORTDIR_OVERLAY="/usr/local/portage"
+
+GENTOO_MIRRORS="http://gentoo.mirrors.tds.net/gentoo http://gentoo.osuosl.org/ http://gentoo.mirrors.pair.com/"
+SYNC="rsync://rsync.us.gentoo.org/gentoo-portage"
+
+# synaptics is for the touchpad
+INPUT_DEVICES="evdev keyboard mouse synaptics"
+
+# You'll want this so grub knows how to deal with the EFI partition
+# and setup a bootable system properly
+GRUB_PLATFORMS="efi-64"
+
+# I study Japanese so...
+LINGUAS="ja en"
+----
+
+A note on USE flags is that I tend to use `/etc/portage/package.use` a lot more than IUSE, as most changes I want to keep specific to a package. Next is to copy over `/etc/resolv.conf` settings to the chroot so it knows where google.com and what not are:
+
+[source,text]
+----
+# cp -L /etc/resolv.conf /mnt/gentoo/etc/
+----
+
+Finally there is setting up some system directories for the chroot by linking them with the host system:
+
+[source,text]
+----
+# mount -t proc none /mnt/gentoo/proc
+# mount --rbind /sys /mnt/gentoo/sys
+# mount --rbind /dev /mnt/gentoo/dev
+----
+
+== chroot and Portage Setup ==
+
+Time to enter the chroot. A custom PS1 is added so it's easy to tell which is the host and which is the chroot:
+
+[source,text]
+----
+# chroot /mnt/gentoo /bin/bash
+# source /etc/profile
+# export PS1="(chroot) $PS1"
+----
+
+A portage tree is kind of a nice thing to have. I tend to stick with web-rsync for stable which doesn't change much, but since this is unstable I'll go ahead and sync to the absolute latest version of the tree (well, outside of CVS):
+
+[source,text]
+----
+# mkdir /usr/portage
+# emerge-webrsync # This creates a faster start point for emerge --sync
+# emerge --sync
+----
+
+The next step is the profile which is usually straightforward. However due to the fact that there isn't a combined hardened / gnome official profile, it will be necessary to create a custom one. First is creating the `PORTDIR_OVERLAY` directory structure:
+
+[source,text]
+----
+# mkdir -p /usr/local/portage/profiles/hardened-gnome
+# cd /usr/local/portage
+----
+
+First is the repository name, which isn't *really* necessary, but it does make annoying warnings go away:
+
+[source,text]
+----
+# echo 'hardened-gnome' > profiles/repo_name
+----
+
+The use case for this is generally telling apart the main upstream portage repository from a local repository in terms of managing packages. Next is the list of architectures that this profile can support. As this an AMD64 system I'll just leave it as amd64 only:
+
+[source,text]
+----
+# echo 'amd64' > profiles/hardened-gnome/arch.list
+----
+
+Now profiles are cascading in nature, so creating a hardened gnome profile is as simple as pointing to the respective profile locations:
+
+[source,text]
+----
+# nano -w profiles/hardened-gnome/parent
+
+../../../../portage/profiles/targets/desktop/gnome
+../../../../portage/profiles/hardened/linux/amd64
+----
+
+The profile locations are pointed to using relative directory traversal. Now to set this as the main profile:
+
+[source,text]
+----
+# rm /etc/portage/make.profile && ln -s /usr/local/portage/profiles/hardened-gnome /etc/portage/make.profile
+----
+
+Just to make sure it worked properly, a test emerge:
+
+[source,text]
+----
+# emerge -pv nano
+
+These are the packages that would be merged, in order:
+
+Calculating dependencies... done!
+[ebuild     U  ] app-editors/nano-2.3.2 [2.3.1-r2] USE="justify magic ncurses nls spell* unicode -debug -minimal -slang" 1,686 kB
+----
+
+Okay so everything looks good there. Now on to the kernel.
+
+== Kernel ==
+
+Everyone's favorite part of the setup: the kernel. This will section will focus on the kernel via specific parts necessary for the various hardware components of the MacBook Pro Retina as well a necessary for encrypted root. First off is getting the kernel sources. Gentoo has a Grsecurity patched kernel all setup that can be emerged:
+
+[source,text]
+----
+# emerge sys-kernel/hardened-sources
+----
+
+First off I used a patch that supports https://gist.github.com/cwgem/5464697[various CPU mtune options for modern processors]. It was ported from https://github.com/graysky2/kernel_gcc_patch[this repository]. An easy patching method is to download it to root and apply it from within the source tree:
+
+[source,text]
+----
+# wget https://gist.github.com/cwgem/5464697/raw/8624f6874f6d60c269b98a3b1fd35cea6cc83da9/gistfile1.txt -O kernel-3.8.8-gcc-cpu-additions.patch
+# cd /usr/src/linux-3.8.8-hardened/
+# patch -i ~/kernel-3.8.8-gcc-cpu-additions.patch -p1
+----
+
+Now for the actual kernel setup. The `make menuconfig` option is used here to make things as easy as possible:
+
+[source,text]
+----
+# make menuconfig
+----
+
+=== CPU Selection ===
+
+First is the selection of processor features:
+
+[source,text]
+----
+Processor type and features  --->
+  Processor family (Generic-x86-64)  --->
+    (X) Intel Core i7
+----
+
+If you don't feel like applying the above patch, there is an `Intel Core 2` option that can be used instead. 
+
+=== Filesystem ===
+
+For this I build in ext2 (for boot) and ext4 (for root). Other filesystems are built in as modules:
+
+[source,text]
+----
+File systems  --->
+  <*> Second extended fs support
+    [*]   Ext2 extended attributes
+    [*]     Ext2 POSIX Access Control Lists
+    [*]     Ext2 Security Labels
+    [ ]   Ext2 execute in place support (NEW)
+  <M> Ext3 journalling file system support
+    [*]   Default to 'data=ordered' in ext3 (NEW)
+    [*]   Ext3 extended attributes (NEW)
+    [*]     Ext3 POSIX Access Control Lists
+    [*]     Ext3 Security Labels
+  <*> The Extended 4 (ext4) filesystem
+    [*]   Use ext4 for ext2/ext3 file systems (NEW)
+    [*]   Ext4 POSIX Access Control Lists
+    [*]   Ext4 Security Labels
+    [ ]   EXT4 debugging support (NEW)
+    [ ] JBD2 (ext4) debugging support (NEW)
+  <M> Reiserfs support
+    [ ]   Enable reiserfs debug mode (NEW)
+    [ ]   Stats in /proc/fs/reiserfs (NEW)
+    [ ]   ReiserFS extended attributes (NEW)
+  <M> JFS filesystem support
+    [*]   JFS POSIX Access Control Lists
+    [*]   JFS Security Labels
+    [ ]   JFS debugging (NEW)
+    [ ]   JFS statistics (NEW)
+  <M> XFS filesystem support
+    [ ]   XFS Quota support (NEW)
+    [*]   XFS POSIX ACL support
+    [ ]   XFS Realtime subvolume support (NEW)
+    [ ]   XFS Debugging support (EXPERIMENTAL) (NEW)
+  < > GFS2 file system support
+  <M> Btrfs filesystem (EXPERIMENTAL) Unstable disk format
+    [*]   Btrfs POSIX Access Control Lists
+    [ ]   Btrfs with integrity check tool compiled in (DANGEROUS) (NEW)
+----
+
+Note that in all of the filesystems `POSIX Access Control Lists` and `Security Labels` were selected where applicable. This allows `paxctl` to have a dedicated place for setting various attributes for objects that don't work well with the various enforcement features that PaX offers.
+
+=== LVM Support (with crypt) ===
+
+[source,text]
+----
+Device Drivers  --->
+  [*] Multiple devices driver support (RAID and LVM)  --->
+    <*>   Device mapper support
+      [ ]     Device mapper debugging support (NEW)
+      <*>     Crypt target support
+----
+
+All the required options were already selected for LVM. The only change that needed to be made here was enabling `Crypt target support`
+
+=== Cryptography ===
+
+In this case I build them all in out of laziness. It makes it much easier when working with cryptosetup. You may wish to build them all as modules and load them in instead:
+
+[source,text]
+----
+-*- Cryptographic API  --->
+  *** Digest ***
+  -*-   CRC32c CRC algorithm
+  <*>   CRC32c INTEL hardware acceleration
+  <*>   GHASH digest algorithm
+  <*>   MD4 digest algorithm
+  -*-   MD5 digest algorithm
+  <*>   Michael MIC keyed digest algorithm
+  <*>   RIPEMD-128 digest algorithm
+<snip>
+  -*-   Twofish cipher algorithm (x86_64)
+  -*-   Twofish cipher algorithm (x86_64, 3-way parallel)
+  <*>   Twofish cipher algorithm (x86_64/AVX)               
+----
+
+So in essence, everything under `*** Digest ***` and `*** Ciphers ***` is enabled.
+
+=== lspci Check ===
+
+Now time to look at the hardware components:
+
+[source,text]
+----
+00:00.0 Host bridge: Intel Corporation 3rd Gen Core processor DRAM Controller (rev 09)
+00:01.0 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor PCI Express Root Port (rev 09)
+00:01.1 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor PCI Express Root Port (rev 09)
+00:01.2 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor PCI Express Root Port (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 3rd Gen Core processor Graphics Controller (rev 09)
+00:14.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller (rev 04)
+00:16.0 Communication controller: Intel Corporation 7 Series/C210 Series Chipset Family MEI Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 (rev 04)
+00:1b.0 Audio device: Intel Corporation 7 Series/C210 Series Chipset Family High Definition Audio Controller (rev 04)
+00:1c.0 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 1 (rev c4)
+00:1c.1 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 2 (rev c4)
+00:1d.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation HM77 Express Chipset LPC Controller (rev 04)
+00:1f.2 SATA controller: Intel Corporation 7 Series Chipset Family 6-port SATA Controller [AHCI mode] (rev 04)
+00:1f.3 SMBus: Intel Corporation 7 Series/C210 Series Chipset Family SMBus Controller (rev 04)
+01:00.0 VGA compatible controller: NVIDIA Corporation GK107M [GeForce GT 650M Mac Edition] (rev a1)
+01:00.1 Audio device: NVIDIA Corporation GK107 HDMI Audio Controller (rev a1)
+03:00.0 Ethernet controller: Broadcom Corporation Device 16a3 (rev 10)
+03:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765 Memory Card Reader (rev 10)
+04:00.0 Network controller: Broadcom Corporation BCM4331 802.11a/b/g/n (rev 02)
+----
+
+So things to check on here:
+
+1. Wireless
+2. SATA support (otherwise nasty kernel panics happen)
+3. USB Support
+4. Graphics Support
+5. Audio Support
+6. Memory card support
+7. Touchpad support
+8. Keyboard backlight support
+9. Webcam support
+
+==== Wireless ====
+
+This is actually a fairly complicated part unless you've done it enough. The newer MacBook Pro Retinas have a newer Broadcom chip that's a bit interesting in getting to work. So pay attention here as all of these are very important and lack of them may cause you endless frustration. First off is enabling the B43 driver:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] Network device support  --->
+    [*]   Wireless LAN (NEW)  --->
+      <M>   Broadcom 43xx wireless support (mac80211 stack)
+      [ ]     Broadcom 43xx PCMCIA device support (NEW)
+      [*]   Support for 802.11n (N-PHY) devices (EXPERIMENTAL)
+      [*]   Support for low-power (LP-PHY) devices (NEW)
+      [*]   Support for HT-PHY (high throughput) devices (EXPERIMENTAL)
+----
+
+Here I also disabled all the entries under:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] Network device support  --->
+    [*]   Ethernet driver support  --->
+----
+
+As I only plan to use wireless for this system. Next is PHY support, enabling the two Broadcom entries as modules:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] Network device support  --->
+    <*>   PHY Device support and infrastructure  --->
+      <M>   Drivers for Broadcom PHYs
+      <M>   Driver for Broadcom BCM8706 and BCM8727 PHYs
+----
+
+Next is GPIO support:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] GPIO Support  --->
+    <M>   Intel ICH GPIO
+----
+
+This will allow necessary GPIO support for the Broadcom AMBA:
+
+[source,text]
+----
+Device Drivers  --->
+  Broadcom specific AMBA  --->
+    <M> BCMA support
+    [*]   Support for BCMA on PCI-host bus
+    [*] BCMA Broadcom GBIT MAC COMMON core driver
+    [*] BCMA GPIO driver
+    [ ] BCMA debugging (NEW) 
+----
+
+This is the last of what needs to be done for wireless to work properly in the kernel. 
+
+==== SATA ====
+
+Nothing needed to be done here, as the appropriate SATA drivers were already enabled.
+
+==== USB Support (Including iSight) ====
+
+Yes the iSight driver is located here. USB 3.0 needs to be enabled as well:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] USB support (NEW)  --->
+    <*>   xHCI HCD (USB 3.0) support
+    <*>   iSight firmware loading support
+----
+
+==== Graphics Support ====
+
+Intel graphics is already enabled, but the Nvidia support needs work. First off to enable the open source driver (in a grsecurity patched kernel you really don't want to deal with the closed binary...):
+
+[source,text]
+----
+Device Drivers  --->
+  Graphics support  --->
+    <*> Nouveau (nVidia) cards
+    (5)   Maximum debug level (NEW)
+    (3)   Default debug level (NEW)
+    [*]   Support for backlight control (NEW)
+----
+
+Next is framebuffer support, where both Nvidia and Intel options get enabled, along with VESA as a fallback:
+
+[source,text]
+----
+Device Drivers  --->
+  Graphics support  --->
+    -*- Support for frame buffer devices  --->
+      [*]   VESA VGA graphics support
+      [*]   EFI-based Framebuffer Support
+      < >   N411 Apollo/Hecuba devkit support (NEW)
+      < >   Hercules mono graphics support (NEW)
+      < >   Epson S1D13XXX framebuffer support (NEW)
+      <*>   nVidia Framebuffer Support
+      [*]     Enable DDC Support
+      [ ]     Lots of debug output (NEW)
+      [*]     Support for backlight control (NEW)
+      <*>   nVidia Riva support
+      [*]     Enable DDC Support
+      [ ]     Lots of debug output (NEW)
+      [*]     Support for backlight control (NEW)
+      <*>   Intel740 support (EXPERIMENTAL)
+      <*>   Intel LE80578 (Vermilion) support
+      <*>     Intel Carillo Ranch support
+----
+
+Finally the backlight driver:
+
+[source,text]
+----
+Device Drivers  --->
+  Graphics support  --->
+    --- Backlight & LCD device support
+      <*>     Apple Backlight Drive
+----
+
+==== Audio Support ====
+
+Nothing to be done here as the correct drivers are already selected. As a side note I removed the PCMCIA and USB audio support as I really don't use those. 
+
+==== Memory Card Support ====
+
+The following option were enable for the SD card reader support:
+
+[source,text]
+----
+Device Drivers  --->
+  <*> MMC/SD/SDIO card support  --->
+    <*>   Secure Digital Host Controller Interface support
+    <*>   SDHCI support on PCI bus
+    [ ]     Ricoh MMC Controller Disabler  (EXPERIMENTAL) (NEW)
+    <*>   SDHCI support for ACPI enumerated SDHCI controllers
+    <*>   SDHCI platform and OF driver helper
+----
+
+==== Touchpad Support ====
+
+This is considered a "mouse" and will need to be enabled:
+
+[source,text]
+----
+Device Drivers  --->
+    Input device support  --->
+      [*]   Mice (NEW)  --->
+      <*>   Apple USB BCM5974 Multitouch trackpad support
+----
+
+==== Keyboard Backlight ====
+
+This also enables a few other Mac specific items:
+
+[source,text]
+----
+Device Drivers  --->
+  -*- Hardware Monitoring support  --->
+    <*>   Apple SMC (Motion sensor, light sensor, keyboard backlight)
+----
+
+==== Webcam ====
+
+The actual iSight USB part has been enabled, but general media support is still required:
+
+[source,text]
+----
+Device Drivers  --->
+  <*> Multimedia support  --->
+    [*]   Cameras/video grabbers support
+    [*]   Media USB Adapters  --->
+      <*>   USB Video Class (UVC)
+      [*]     UVC input events device support (NEW)
+----
+
+=== Security ===
+
+Now that the hardware is out of the way it's time for security setup:
+
+[source,text]
+----
+Security options  ---> 
+  [*] Grsecurity
+    Configuration Method (Automatic)  ---> 
+    Usage Type (Desktop)  --->
+    Virtualization Type (None)  --->
+    Required Priorities (Performance)  --->
+    Default Special Groups  --->
+    Customize Configuration  --->
+----
+
+Basically automatic configuration is chosen with emphasis on performance and desktop usage. SELinux was also disabled as I plan to use RBAC instead.
+
+== Building The Kernel ==
+
+First just to be safe after all that work:
+
+[source,text]
+----
+# cp .config ~/config.back
+----
+
+I tend to do the kernel build as a one liner:
+
+[source,text]
+----
+# make clean && make -j8 && make modules_install && make install
+----
+
+The `make clean` ensure the build environment is clean before compiling (no objects laying around). `make -j8` does an 8 job parallel build since this is a corei7 system and I want the build to go quickly. `make modules_install` installs all the modules into `/lib/modules` so they can be loaded properly. Finally, `make install` installs the kernel image to `/boot`.
