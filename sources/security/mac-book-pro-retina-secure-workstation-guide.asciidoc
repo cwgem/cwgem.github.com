@@ -288,7 +288,7 @@ Everything checks out there so time to extract the tarball. Be sure to use the e
 
 [source,text]
 ----
-
+# tar xvjpf stage3-*.tar.bz2
 ----
 
 == chroot Prep ==
@@ -689,6 +689,23 @@ Device Drivers  --->
     <*>   iSight firmware loading support
 ----
 
+Also, I use cups for printing support and it will mention:
+
+[source,text]
+----
+ * Your usb printers will be managed via libusb. In this case, 
+ * cups-1.6.2 requires the USB_PRINTER support disabled.
+----
+
+So that can be disabled here:
+
+[source,text]
+----
+Device Drivers  --->
+  [*] USB support  --->
+    < >   USB Printer support
+----
+
 ==== Graphics Support ====
 
 Intel graphics is already enabled, but the Nvidia support needs work. First off to enable the open source driver (in a grsecurity patched kernel you really don't want to deal with the closed binary...):
@@ -810,7 +827,14 @@ Security options  --->
     Customize Configuration  --->
 ----
 
-Basically automatic configuration is chosen with emphasis on performance and desktop usage. SELinux was also disabled as I plan to use RBAC instead.
+Basically automatic configuration is chosen with emphasis on performance and desktop usage. SELinux was also disabled as I plan to use RBAC instead. Also for `sys-auth/consolekit` syscall auditing needs to be enabled:
+
+[source,text]
+----
+General setup  --->
+  [*] Auditing support
+  [*]   Enable system-call auditing support
+----
 
 === Building The Kernel ===
 
@@ -842,5 +866,184 @@ The only module I really load is for wifi:
 Everything else will get pulled in as part of the module dependency resolution process.
 
 == Basic Configuration ==
+
+=== fstab ===
+
+Now for basic adjustment of config files. To start off there's `/etc/fstab`, which is needed for volumes to mount properly at boot. Since this is LVM, the `/dev/mapper` nodes will be used instead (the exception being the `/boot` partition):
+
+[source,text]
+----
+# nano -w /etc/fstab
+
+# <fs>                  <mountpoint>    <type>          <opts>          <dump/pass>
+
+# NOTE: If your BOOT partition is ReiserFS, add the notail option to opts.
+/dev/sda4               /boot           ext2            noauto,noatime  1 2
+/dev/mapper/crypt-root  /               ext4            noatime         0 1
+/dev/mapper/crypt-swap  none            swap            sw              0 0
+/dev/cdrom              /mnt/cdrom      auto            noauto,ro       0 0
+----
+
+=== Hosts ===
+
+Next is the hostname for the system, which is whatever you fancy the system to be named. In this case I went with inferno:
+
+[source,text]
+----
+# nano -w /etc/conf.d/hostname
+# Set to the hostname of this machine
+hostname="inferno"
+----
+
+I'm using DHCP so setting the domain name is of no concern to me. However it does leave a nasty `(none)` bit at login, so this will get rid of that:
+
+[source,text]
+----
+# nano -w /etc/issue
+ 
+This is \n (\s \m \r) \t
+----
+
+Finally adding the hostname information to `/etc/hosts` so that it resolves properly:
+
+[source,text]
+----
+# nano -w  /etc/hosts
+127.0.0.1       localhost inferno
+::1             localhost inferno
+----
+
+== System Info ==
+
+First a root password needs to be set:
+
+[source,text]
+----
+# passwd
+New password: 
+Retype new password: 
+passwd: password updated successfully
+----
+
+There's only a slight change to be made here for `/etc/rc.conf`. That is to enable hotplugging of network services, as NetworkManager will be used:
+
+[source,text]
+----
+# nano -w /etc/rc.conf
+
+<snip>
+rc_hotplug="!net.*nano -w /etc/rc.conf"
+<snip>
+----
+
+The hardware clock needs to be set to local:
+
+[source,text]
+----
+# nano -w /etc/conf.d/hwclock
+
+<snip>
+clock="local"
+<snip>
+----
+
+Finally is the locales. Most will be okay with just `en_US.UTF-8` and `en_US ISO-8859-1`. However I also happen to work with Japanese files and so forth, so my locale setup ends up like this:
+
+[source,text]
+----
+# nano -w /etc/locale.gen
+en_US ISO-8859-1
+en_US.UTF-8 UTF-8
+ja_JP.EUC-JP EUC-JP
+ja_JP.UTF-8 UTF-8
+ja_JP EUC-JP
+----
+
+Now to generate the locales:
+
+[source,text]
+----
+# locale-gen 
+ * Generating 5 locales (this might take a while) with 1 jobs
+ *  (1/5) Generating en_US.ISO-8859-1 ... [ ok ]
+ *  (2/5) Generating en_US.UTF-8 ... [ ok ]
+ *  (3/5) Generating ja_JP.EUC-JP ... [ ok ]
+ *  (4/5) Generating ja_JP.UTF-8 ... [ ok ]
+ *  (5/5) Generating ja_JP.EUC-JP ... [ ok ]
+ * Generation complete
+----
+
+== Unstable Bootstrap ==
+
+Now, this is an unstable system, and with changes to the profile new keywords have been added. This means the base system isn't quite up to date yet. So to get around this I'm going to do a bit of bootstrapping. The process will basically be:
+
+1. Rebuild system packages - This gives a gcc/glibc which produces optimized code
+2. Rebuild system packages again - This builds gcc/glibc itself using the optimized code
+3. Rebuild all packages - This rebuilds everything with the new gcc/glibc to be properly optimized
+
+You don't really have to do this, I just like to be thorough. Also note that the new USE flags and system profile will bring in other non-core system packages. That's okay though it's an corei7!
+
+=== Rebuild System Packages ===
+
+First run an `emerge -epv system` to ensure nothing really weird will happen:
+
+[source,text]
+----
+# emerge -epv system
+----
+
+[WARNING]
+As of this writing a version of autotools https://bugs.gentoo.org/show_bug.cgi?id=451744[breaks a few builds]. I recommend masking it until that bug is resolved:
+
+[source,text]
+----
+# mkdir /etc/portage/package.mask
+# echo '=sys-devel/automake-1.13.1' >> /etc/portage/package.mask/automake
+----
+
+If anything shows up at the bottom that looks unsolvable, best to ask on mailing lists/IRC/forums. Now then grab a nice book or so and fire away if everything looks good:
+
+[source,text]
+----
+# emerge -e system
+----
+
+The kernel ebuild doesn't actually compile the kernel so:
+
+[source,text]
+----
+# cd /usr/src/linux
+# make clean && make -j8 && make modules_install && make install
+----
+
+=== Rebuild System Packages Again ===
+
+Another quick check:
+
+[source,text]
+----
+# emerge -epv system
+----
+
+Followed by another rebuild:
+
+[source,text]
+----
+# emerge -e system
+----
+
+And another kernel compile:
+
+[source,text]
+----
+# cd /usr/src/linux
+# make clean && make -j8 && make modules_install && make install
+----
+
+=== Rebuild All The Packages ===
+
+Now it's time to compile system again along with all the other packages we want. Recompiling system... well just follow the instructions from the previous section. Now then on to the packages we really want.
+
+==== Wifi ===
 
 
