@@ -6,7 +6,14 @@ MacBook Pro Retina Secure Workstation Guide
 
 == Introduction ==
 
-A work in progress guide for encrypted root (lvm/cryptosetup) MacBook Pro Retina install with grsecurity patched kernel. 
+A work in progress guide for encrypted root (lvm/cryptosetup) MacBook Pro Retina install with grsecurity patched kernel. The following are primary sources utilized while making this guide:
+
+* http://en.gentoo-wiki.com/wiki/Apple_Macbook_Pro[Apple Macbook Pro]
+* http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml[Gentoo AMD64 Handbook]
+* http://en.gentoo-wiki.com/wiki/Root_filesystem_over_LVM2,_DM-Crypt_and_RAID[Root filesystem over LVM2, DM-Crypt and RAID]
+* http://wiki.gentoo.org/wiki/Apple_Macbook_Pro_Retina[Apple Macbook Pro Retina]
+
+Thank you to all the authors who worked on these guides and allowed me to consolidate the information into a guide format. 
 
 == Partitioning ==
 
@@ -1044,6 +1051,396 @@ And another kernel compile:
 
 Now it's time to compile system again along with all the other packages we want. Recompiling system... well just follow the instructions from the previous section. Now then on to the packages we really want.
 
-==== Wifi ===
+==== Wifi ====
 
+There's two main packages needed for wifi to work properly. The first is the firmware that is loaded by the b43 module. First the Broadcom license needs to be accepted for the firmware to be installable. The license can be found here:
 
+[source,text]
+----
+# nano -w /usr/portage/licenses/Broadcom
+----
+
+Assuming you accept the license, the firmware can be installed this way:
+
+[NOTE]
+If you don't then you might want to try another broadcom driver, or get a thunderbolt/USB ethernet adapter instead
+
+[source,text]
+----
+# mkdir /etc/portage/package.license/ && echo '>=sys-firmware/b43-firmware-5.100.138 Broadcom' >> /etc/portage/package.license/broadcom
+# emerge sys-firmware/b43-firmware
+----
+
+Next is NetworkManager, which I've found to be by far the easiest to manage wireless connections, even on command line:
+
+[source,text]
+----
+# emerge networkmanager
+# rc-update add NetworkManager default
+----
+
+==== Terminal Emulator ====
+
+I use tmux for this. Others may prefer screen. I find it an easy way to make sure a lost SSH connection doesn't kill all the things I'm working on:
+
+[source,text]
+----
+# emerge tmux
+----
+
+==== Time Server ====
+
+This makes sure the time sync is okay:
+
+[source,text]
+----
+# emerge net-misc/ntp
+----
+
+Due to the fact that NetworkManager needs to authenticate against an access point, I generally start the service manually at connection:
+
+[source,text]
+----
+# /etc/init.d/ntpd start
+----
+
+==== Syslog ====
+
+Here I use `syslog-ng`:
+
+[source,text]
+----
+# emerge syslog-ng
+# rc-update add syslog-ng default
+----
+
+==== Cron ====
+
+For cron I use `cronie` which is different from the `vixie-cron` default. This is mainly because `cronie` has an active upstream and matches most closely with `vixie-cron` functionality:
+
+[source,text]
+----
+# emerge sys-process/cronie
+# rc-udpate add cronie default
+----
+
+==== File Indexing ====
+
+`mlocate` is what I use for file indexing:
+
+[source,text]
+----
+# emerge mlocate
+----
+
+==== SSH Access ====
+
+Thankfully the sshd server is already installed, so it's just a matter of starting it at boot:
+
+[source,text]
+----
+# rc-update add sshd default
+----
+
+==== Initrd ====
+
+The initrd file acts as a minimal environment before the main environment loads, letting things like activating LVM volume groups and unlocking the encrypted filesystem happen before the actual boot. Without this the kernel would not be able to boot the root filesystem. So first some packages need to be built with statically. This is needed because `/usr/lib` and the like won't be around in the minimal environment. To build necessary packages statically, the following use flag adjustments are needed:
+
+[source,text]
+----
+# mkdir /etc/portage/package.use
+# nano -w /etc/portage/package.use/static
+
+sys-fs/lvm2 static static-libs
+sys-apps/busybox static
+sys-fs/cryptsetup static
+dev-libs/libgcrypt static-libs
+dev-libs/popt static-libs
+virtual/udev static-libs
+dev-libs/libgpg-error static-libs
+sys-libs/e2fsprogs-libs static-libs
+sys-apps/util-linux static-libs
+sys-fs/udev static-libs
+----
+
+Now to emerge the necessary packages:
+
+[source,text]
+----
+# emerge lvm2 busybox cryptsetup
+----
+
+As it hasn't been mentioned, busybox is a minimal shell which is often statically linked to provide rescue shells. Now it's time to create the actual initrd file for the kernel to load. First create a directory for the files to go in:
+
+[source,text]
+----
+# cd ~/ && mkdir initram && cd initram
+----
+
+Now to create the minimal directory structure:
+
+[source,text]
+----
+# mkdir bin dev dev/mapper dev/vc etc newroot proc sys
+----
+
+Next copy over the important static binaries over:
+
+[source,text]
+----
+# cp /bin/busybox /sbin/cryptsetup /sbin/lvm.static bin
+----
+
+Then move over the `lvm.static` file to be just lvm:
+
+[source,text]
+----
+# mv bin/lvm.static bin/lvm
+----
+
+Busybox acts in place of a number of commands, so link these commands to it:
+
+[source,text]
+----
+# for command in cat mount sh switch_root umount sleep; do ln -s busybox "bin/${command}"; done
+----
+
+Same for lvm:
+
+[source,text]
+----
+# for command in vgscan vgchange; do ln -s lvm "bin/${command}"; done
+----
+
+Next creation of some basic device nodes, including the encrypted root device:
+
+[source,text]
+----
+# cp -a /dev/console /dev/sda5 /dev/null /dev/random /dev/urandom dev && ln -s ../console dev/vc/0
+----
+
+Now for an init script, which will be loaded by the kernel, and handles all of the automation magic:
+
+[source,text]
+----
+# nano init
+----
+
+[source,text]
+----
+#!/bin/sh
+
+mount -t proc none /proc
+CMDLINE='cat /proc/cmdline'
+
+mount -t sysfs none /sys
+
+#wait a little to avoid trailing kernel output
+sleep 3
+
+#rescue function in case something is going wrong
+rescue_shell() {
+    echo "Something went wrong. Dropping you to a shell."
+    busybox --install -s
+    exec /bin/sh
+}
+
+#dm-crypt
+/bin/cryptsetup luksOpen /dev/sda5 encrypt || rescue_shell
+
+#lvm
+/bin/lvm vgchange -ay crypt || rescue_shell
+
+#root filesystem
+mount -r /dev/mapper/crypt-root /newroot || rescue_shell
+
+#unmount pseudo FS
+umount /sys
+umount /proc
+
+#root switch
+exec /bin/busybox switch_root /newroot /sbin/init ${CMDLINE}
+----
+
+The permissions need to be adjusted:
+
+[source,text]
+----
+# chmod a+x init
+----
+
+Now to create the initrd file:
+
+[source,text]
+----
+# find . | cpio --quiet -o -H newc | gzip -9 > /boot/initrd-3.8.8-hardened
+----
+
+Note that the file is named that way because `grub2-mkconfig` which will be used in a moment recognizes this particular pattern and automates the entire config generation process. 
+
+==== Bootloader ====
+
+Before even starting make sure this is in `/etc/portage/make.conf`:
+
+[source,text]
+----
+GRUB_PLATFORMS="efi-64"
+----
+
+Also mount the EFI partition, which in this case is `/dev/sda1`:
+
+[source,text]
+----
+# mkdir /boot/efi && mount /dev/sda1 /boot/efi
+----
+
+Now emerge grub2 which provides excellent EFI boot support:
+
+[source,text]
+----
+# emerge grub:2
+----
+
+Finally the actual setup process:
+
+[source,text]
+----
+# grub2-install --target=x86_64-efi --efi-directory=/boot/efi --boot-directory=/boot/efi/EFI --bootloader-id=grub2 --recheck
+Installation finished. No error reported.
+----
+
+If something goes weird here, be sure that `/boot/efi` is mounted, and target is spelled properly. Should that fail it would be best to ask for advice on forums/IRC/mailing list. Finally the bootloader configuration needs to be generated, which `grub2-mkconfig` handles:
+
+[source,text]
+----
+# grub2-mkconfig -o /boot/efi/EFI/grub2/grub.cfg
+----
+
+[source,text]
+----
+# grub2-mkconfig -o /boot/efi/EFI/grub2/grub.cfg
+Generating grub.cfg ...
+Found linux image: /boot/vmlinuz-3.8.8-hardened
+Found initrd image: /boot/initrd-3.8.8-hardened
+Found linux image: /boot/vmlinuz-3.8.8-hardened.old
+Found initrd image: /boot/initrd-3.8.8-hardened
+done
+----
+
+Noticed how it picked up both the initrd and vmlinuz files, which produces the following configuration section in `/boot/efi/EFI/grub2/grub.cfg`:
+
+[source,text]
+----
+menuentry 'Gentoo GNU/Linux' --class gentoo --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-/dev/mapper/crypt-root' {
+        load_video
+        set gfxpayload=keep
+        insmod gzio
+        insmod part_gpt
+        insmod ext2
+        set root='hd0,gpt4'
+        if [ x$feature_platform_search_hint = xy ]; then
+          search --no-floppy --fs-uuid --set=root --hint-bios=hd0,gpt4 --hint-efi=hd0,gpt4 --hint-baremetal=ahci0,gpt4  01d8ad9b-0e43-4640-b3f5-7ecef704f59b
+        else
+          search --no-floppy --fs-uuid --set=root 01d8ad9b-0e43-4640-b3f5-7ecef704f59b
+        fi
+        echo    'Loading Linux 3.8.8-hardened ...'
+        linux   /vmlinuz-3.8.8-hardened root=/dev/mapper/crypt-root ro  
+        echo    'Loading initial ramdisk ...'
+        initrd  /initrd-3.8.8-hardened
+----
+
+== Booting Into The New System ==
+
+Now for the moment of truth, which is to boot into the new system! First exit the chroot:
+
+[source,text]
+----
+(chroot) stuff initram # exit
+exit
+stuff ~ #
+----
+
+Be sure that there are not any open screen/tmux sessions open that might be in one of the `/mnt/gentoo` directories. If there is one, it will prevent umounting of the `/mnt/gentoo` directory. Now then to unmount everything:
+
+[source,text]
+----
+# umount /mnt/gentoo/boot/efi
+# umount /mnt/gentoo/boot
+# umount /mnt/gentoo/proc
+# umount -l /mnt/gentoo/sys
+# umount -l /mnt/gentoo/dev
+# umount /mnt/gentoo
+----
+
+Order is important here, as you cannot unmount a directory if there is something mounted in one of its subdirectories. Also the `-l` is used for cases where `--rbind` was passed to mount. Now all that's left is the reboot:
+
+[source,text]
+----
+# reboot
+----
+
+Upon reboot you should be prompted with:
+
+[source,text]
+----
+Enter passphrase for /dev/sda5:
+----
+
+Enter the passphrase here, and be sure to do it as soon as possible or driver loading will fail to proceed properly. Once everything has booted you will need to login as root. Next is to connect to the wifi access point of choice with network manager:
+
+[source,text]
+----
+# nmcli dev list
+----
+
+Will give you a list of access point in case you can't remember the SSID off hand. Once the SSID is found then just:
+
+[source,text]
+----
+# nmcli dev wifi connect <SSID> password <password>
+----
+
+From there it's recommended to delete that line from `~/.bash_history` for security purposes. Now to test the SSH connectivity:
+
+[source,text]
+----
+# ssh root@<ip>
+----
+
+The SSH server fingerprint will differ from the so you will need to remove the entry from known hosts. Once the entry has been removed *physically walk over to the machine* and enter:
+
+[source,text]
+----
+# ssh-keygen -l -f /etc/ssh/ssh_host_ecdsa_key.pub 
+256 cc:22:b2:e1:9e:15:ce:77:bc:77:28:a7:e5:7a:c3:5c  root@inferno (ECDSA)
+----
+
+Now ssh to the machine and verify that the fingerprint maches:
+
+[source,text]
+----
+$ ssh root@<ip>
+The authenticity of host '<ip> (<ip>)' can't be established.
+ECDSA key fingerprint is cc:22:b2:e1:9e:15:ce:77:bc:77:28:a7:e5:7a:c3:5c.
+Are you sure you want to continue connecting (yes/no)? yes
+----
+
+The key matches okay so I continue to connect. If the key does not match *do not continue there is something seriously wrong ask for help on a forum*. 
+
+== User Setup ==
+
+Now to setup a standard user:
+
+[source,text]
+----
+# useradd -m -G users,wheel,audio,video -s /bin/bash cwgem
+# passwd cwgem
+New password: 
+Retype new password: 
+passwd: password updated successfully
+----
+
+* users - Makes a general user
+* wheel - Allows for `su` and used for `sudo` access
+* audio - Allows for audio device access
+* video - Want this for the iSight access
