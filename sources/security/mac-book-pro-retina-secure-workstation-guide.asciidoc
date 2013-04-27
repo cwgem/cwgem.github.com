@@ -267,29 +267,34 @@ And so does the root mount.
 
 == Stages ==
 
-The stage I use is the hardened stage, which has already been pre-compiled with the hardened toolchain. It can be found on http://www.gentoo.org/main/en/mirrors2.xml[one of the mirrors] under the directory `/releases/amd64/current-stage3/hardened/`. Now to download it to the chroot directory:
+The stage I use is the hardened stage, which has already been pre-compiled with the hardened toolchain. It can be found on http://www.gentoo.org/main/en/mirrors2.xml[one of the mirrors] under the directory `/releases/amd64/autobuilds/current-stage3-amd64-hardened/`. Now to download it to the chroot directory:
+
+[WARNING]
+The tarball name changes with new builds. If the URL doesn't work navigate to the directory above on the mirrors and grab the tarball with the naming format `stage3-amd64-hardened-YYYYMMDD.tar.bz2`.
 
 [source,text]
 ----
 # cd /mnt/gentoo
-# wget http://gentoo.mirrors.pair.com/releases/amd64/current-stage3/hardened/20130418/stage3-amd64-hardened-20130418.tar.bz2
+# wget http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-hardened/stage3-amd64-hardened-20130425.tar.bz2
 ----
 
 Just to be safe, verify the SHA hash of the tarball:
 
+[WARNING]
+Same warning for the above.
+
 [source,text]
 ----
-# wget http://gentoo.mirrors.pair.com/releases/amd64/current-stage3/hardened/20130418/stage3-amd64-hardened-20130418.tar.bz2.DIGESTS.asc
-# openssl dgst -r -sha512 stage3-amd64-hardened-20130418.tar.bz2
-55c3483d1a9b86ed5805bbc44ee15274b6a57269a4bc9229b11017f6525d6ffdc6c8ee6b8c151ccb63c1a482e3f73a8d0dea10c9a5300786f0d20b347206588c *stage3-amd64-hardened-20130418.tar.bz2
-# cat stage3-amd64-hardened-20130418.tar.bz2.DIGESTS.asc
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-# SHA512 HASH
-55c3483d1a9b86ed5805bbc44ee15274b6a57269a4bc9229b11017f6525d6ffdc6c8ee6b8c151ccb63c1a482e3f73a8d0dea10c9a5300786f0d20b347206588c  stage3-amd64-hardened-20130418.tar.bz2
-....
+# wget http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-hardened/stage3-amd64-hardened-20130425.tar.bz2.{DIGESTS.asc,CONTENTS}
+# sha512sum -c stage3-amd64-hardened-20130425.tar.bz2.DIGESTS.asc 
+stage3-amd64-hardened-20130425.tar.bz2: OK
+stage3-amd64-hardened-20130425.tar.bz2: FAILED
+stage3-amd64-hardened-20130425.tar.bz2.CONTENTS: OK
+stage3-amd64-hardened-20130425.tar.bz2.CONTENTS: FAILED
 ----
+
+[NOTE]
+The two failed lines are because whirlpool hashes are included in the file and `sha512sum` doesn't understand them. As long as the `.bz2` and `.bz2.CONTENTS` shows as okay at least once there is nothing to worry about.
 
 Everything checks out there so time to extract the tarball. Be sure to use the exact options for extraction so the tarball ends up with proper permissions:
 
@@ -314,15 +319,15 @@ My `/etc/portage/make.conf` ended up looking like this (comments inline explaini
 
 [source,text]
 ----
-# Only thing really different from the default is the 
+# Only thing really different from the default is the
 # -march=corei7 bit
 CFLAGS="-O2 -march=corei7 -pipe"
 CXXFLAGS="${CFLAGS}"
 CHOST="x86_64-pc-linux-gnu"
 
-# I decided to keep with the latest version of 
+# I decided to keep with the latest version of
 # stuff a lot, so I'm going with the unstable
-# keyword route. For a *production* workstation 
+# keyword route. For a *production* workstation
 # this should be deleted to maintain stable
 # keywords.
 ACCEPT_KEYWORDS="~amd64"
@@ -331,14 +336,17 @@ ACCEPT_KEYWORDS="~amd64"
 # fuse - Good for tools like encfs
 # xinerama - For *painless* dual monitor setups
 # alsa - Alsa sound support
+# threads - It is a multi-core after all
+# networkmanager - Since network manager is the primary way to get wireless networking
+# -pulseaudio - Not terribly secure and a few exploits use it. 
 # Everything else is customized stuff that may or may not apply to you
 # Most of the gnome related stuff will come from the profile
-USE="gstreamer erlang ruby smp ffmpeg theora vpx vim-syntax cjk -sdl fuse xinerama alsa"
+USE="gstreamer erlang ruby smp ffmpeg theora vpx vim-syntax cjk -sdl fuse xinerama alsa -pulseaudio -qt4 -gnome networkmanager threads"
 
 # Weeee Core i7
 MAKEOPTS="-j8"
 
-# This is for a custom profile that mixes hardened with gnome 
+# This is for a custom profile that mixes hardened with gnome
 PORTDIR_OVERLAY="/usr/local/portage"
 
 GENTOO_MIRRORS="http://gentoo.mirrors.tds.net/gentoo http://gentoo.osuosl.org/ http://gentoo.mirrors.pair.com/"
@@ -350,6 +358,9 @@ INPUT_DEVICES="evdev keyboard mouse synaptics"
 # You'll want this so grub knows how to deal with the EFI partition
 # and setup a bootable system properly
 GRUB_PLATFORMS="efi-64"
+
+# Use OpenSSL for curl ssl support
+CURL_SSL="openssl"
 
 # I study Japanese so...
 LINGUAS="ja en"
@@ -395,7 +406,7 @@ The next step is the profile which is usually straightforward. However due to th
 
 [source,text]
 ----
-# mkdir -p /usr/local/portage/profiles/hardened-gnome
+# mkdir -p /usr/local/portage/profiles/hardened-desktop
 # cd /usr/local/portage
 ----
 
@@ -410,16 +421,16 @@ The use case for this is generally telling apart the main upstream portage repos
 
 [source,text]
 ----
-# echo 'amd64' > profiles/hardened-gnome/arch.list
+# echo 'amd64' > profiles/hardened-desktop/arch.list
 ----
 
 Now profiles are cascading in nature, so creating a hardened gnome profile is as simple as pointing to the respective profile locations:
 
 [source,text]
 ----
-# nano -w profiles/hardened-gnome/parent
+# nano -w profiles/hardened-desktop/parent
 
-../../../../portage/profiles/targets/desktop/gnome
+../../../../portage/profiles/targets/desktop/
 ../../../../portage/profiles/hardened/linux/amd64
 ----
 
@@ -427,19 +438,21 @@ The profile locations are pointed to using relative directory traversal. Now to 
 
 [source,text]
 ----
-# rm /etc/portage/make.profile && ln -s /usr/local/portage/profiles/hardened-gnome /etc/portage/make.profile
+# rm /etc/portage/make.profile && ln -s /usr/local/portage/profiles/hardened-desktop /etc/portage/make.profile
 ----
 
 Just to make sure it worked properly, a test emerge:
 
 [source,text]
 ----
-# emerge -pv nano
+# emerge -pv app-editors/nano
 
 These are the packages that would be merged, in order:
 
 Calculating dependencies... done!
 [ebuild     U  ] app-editors/nano-2.3.2 [2.3.1-r2] USE="justify magic ncurses nls spell* unicode -debug -minimal -slang" 1,686 kB
+
+Total: 1 package (1 upgrade), Size of downloads: 1,686 kB
 ----
 
 Okay so everything looks good there. Now on to the kernel.
@@ -461,20 +474,11 @@ Everyone's favorite part of the setup: the kernel. This will section will focus 
 # emerge sys-kernel/hardened-sources
 ----
 
-To get something annoying out of the way ahead of time, `udev` will cry unless this is enabled:
-
-[source,text]
-----
-Device Drivers  --->
-  Generic Driver Options  --->
-    [*] Maintain a devtmpfs filesystem to mount at /dev
-----
-
 Now then to continue I used a patch that supports https://gist.github.com/cwgem/5464697[various CPU mtune options for modern processors]. It was ported from https://github.com/graysky2/kernel_gcc_patch[this repository]. An easy patching method is to download it to root and apply it from within the source tree:
 
 [source,text]
 ----
-# wget https://gist.github.com/cwgem/5464697/raw/8624f6874f6d60c269b98a3b1fd35cea6cc83da9/gistfile1.txt -O kernel-3.8.8-gcc-cpu-additions.patch
+# wget https://gist.github.com/cwgem/5464697/raw/8624f6874f6d60c269b98a3b1fd35cea6cc83da9/gistfile1.txt -O ~/kernel-3.8.8-gcc-cpu-additions.patch
 # cd /usr/src/linux-3.8.8-hardened/
 # patch -i ~/kernel-3.8.8-gcc-cpu-additions.patch -p1
 ----
@@ -484,6 +488,17 @@ Now for the actual kernel setup. The `make menuconfig` option is used here to ma
 [source,text]
 ----
 # make menuconfig
+----
+
+=== Devtempfs ===
+
+To get something annoying out of the way ahead of time, `udev` will cry unless this is enabled:
+
+[source,text]
+----
+Device Drivers  --->
+  Generic Driver Options  --->
+    [*] Maintain a devtmpfs filesystem to mount at /dev
 ----
 
 === CPU Selection ===
@@ -694,6 +709,18 @@ Device Drivers  --->
   [*] USB support (NEW)  --->
     <*>   xHCI HCD (USB 3.0) support
     <*>   iSight firmware loading support
+----
+
+For USB suspend, the following needs to be enabled:
+
+[source,text]
+----
+Power management and ACPI options  --->
+  [*] Run-time PM core functionality
+Device Drivers  --->
+  [*] USB support (NEW)  --->
+      <*>   Support for Host-side USB
+      [*]     USB runtime power management (autosuspend) and wakeup
 ----
 
 Also, I use cups for printing support and it will mention:
@@ -939,7 +966,7 @@ There's only a slight change to be made here for `/etc/rc.conf`. That is to enab
 # nano -w /etc/rc.conf
 
 <snip>
-rc_hotplug="!net.*nano -w /etc/rc.conf"
+rc_hotplug="!net.*"
 <snip>
 ----
 
@@ -984,19 +1011,19 @@ Now to generate the locales:
 
 Now, this is an unstable system, and with changes to the profile new keywords have been added. This means the base system isn't quite up to date yet. So to get around this I'm going to do a bit of bootstrapping. The process will basically be:
 
-1. Rebuild system packages - This gives a gcc/glibc which produces optimized code
-2. Rebuild system packages again - This builds gcc/glibc itself using the optimized code
-3. Rebuild all packages - This rebuilds everything with the new gcc/glibc to be properly optimized
+1. Rebuild packages pass 1 - This gives a gcc/glibc which produces optimized code
+2. Rebuild packages pass 2 - This builds gcc/glibc itself using the optimized code
+3. Rebuild packages step 3 - This rebuilds everything with the new gcc/glibc to be properly optimized
 
-You don't really have to do this, I just like to be thorough. Also note that the new USE flags and system profile will bring in other non-core system packages. That's okay though it's an corei7!
+You don't really have to do this, I just like to be thorough.
 
 === Rebuild System Packages ===
 
-First run an `emerge -epv system` to ensure nothing really weird will happen:
+First run an `emerge -epv world` to ensure nothing really weird will happen:
 
 [source,text]
 ----
-# emerge -epv system
+# emerge -epv world
 ----
 
 [WARNING]
@@ -1012,7 +1039,7 @@ If anything shows up at the bottom that looks unsolvable, best to ask on mailing
 
 [source,text]
 ----
-# emerge -e system
+# emerge -e world
 ----
 
 The kernel ebuild doesn't actually compile the kernel so:
@@ -1131,6 +1158,15 @@ For cron I use `cronie` which is different from the `vixie-cron` default. This i
 [source,text]
 ----
 # emerge mlocate
+----
+
+==== Portage Tools ====
+
+Two main tools here are `eix` and `gentoolkit`. `eix` keeps a database of packages for faster lookups. It also shows a diff of packages for each sync (when you use `eix-sync`). `gentoolkit` provides useful tools for looking up portage related information:
+
+[source,text]
+----
+# emerge eix gentoolkit
 ----
 
 ==== SSH Access ====
@@ -1444,3 +1480,14 @@ passwd: password updated successfully
 * wheel - Allows for `su` and used for `sudo` access
 * audio - Allows for audio device access
 * video - Want this for the iSight access
+
+== Desktop Setup ==
+
+The XFCE desktop will be used, but there are a few customizations I make for my particular use cases. First off I adjusted `USE` and `CURL_SSL` in `/etc/portage/make.conf`:
+
+[source,text]
+----
+USE="gstreamer erlang ruby smp ffmpeg theora vpx vim-syntax cjk -sdl fuse xinerama alsa networkmanager vala emacs"
+
+CURL_SSL="openssl"
+----
