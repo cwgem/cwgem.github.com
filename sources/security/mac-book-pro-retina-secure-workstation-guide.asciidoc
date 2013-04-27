@@ -1017,7 +1017,7 @@ Now, this is an unstable system, and with changes to the profile new keywords ha
 
 You don't really have to do this, I just like to be thorough.
 
-=== Rebuild System Packages ===
+=== Rebuild packages pass 1 ===
 
 First run an `emerge -epv world` to ensure nothing really weird will happen:
 
@@ -1050,20 +1050,20 @@ The kernel ebuild doesn't actually compile the kernel so:
 # make clean && make -j8 && make modules_install && make install
 ----
 
-=== Rebuild System Packages Again ===
+=== Rebuild packages pass 2 ===
 
 Another quick check:
 
 [source,text]
 ----
-# emerge -epv system
+# emerge -epv world
 ----
 
 Followed by another rebuild:
 
 [source,text]
 ----
-# emerge -e system
+# emerge -e world
 ----
 
 And another kernel compile:
@@ -1074,7 +1074,7 @@ And another kernel compile:
 # make clean && make -j8 && make modules_install && make install
 ----
 
-=== Rebuild All The Packages ===
+=== Rebuild packages pass 3 ===
 
 Now it's time to compile system again along with all the other packages we want. Recompiling system... well just follow the instructions from the previous section. Now then on to the packages we really want.
 
@@ -1102,7 +1102,7 @@ Next is NetworkManager, which I've found to be by far the easiest to manage wire
 
 [source,text]
 ----
-# emerge networkmanager
+# emerge net-misc/networkmanager
 # rc-update add NetworkManager default
 ----
 
@@ -1112,7 +1112,7 @@ I use tmux for this. Others may prefer screen. I find it an easy way to make sur
 
 [source,text]
 ----
-# emerge tmux
+# emerge app-misc/tmux
 ----
 
 ==== Time Server ====
@@ -1137,7 +1137,7 @@ Here I use `syslog-ng`:
 
 [source,text]
 ----
-# emerge syslog-ng
+# emerge app-admin/syslog-ng
 # rc-update add syslog-ng default
 ----
 
@@ -1157,7 +1157,7 @@ For cron I use `cronie` which is different from the `vixie-cron` default. This i
 
 [source,text]
 ----
-# emerge mlocate
+# emerge sys-apps/mlocate
 ----
 
 ==== Portage Tools ====
@@ -1166,7 +1166,7 @@ Two main tools here are `eix` and `gentoolkit`. `eix` keeps a database of packag
 
 [source,text]
 ----
-# emerge eix gentoolkit
+# emerge app-portage/eix app-portage/gentoolkit
 ----
 
 ==== SSH Access ====
@@ -1203,7 +1203,7 @@ Now to emerge the necessary packages:
 
 [source,text]
 ----
-# emerge lvm2 busybox cryptsetup
+# emerge sys-fs/lvm2 sys-apps/busybox sys-fs/cryptsetup
 ----
 
 As it hasn't been mentioned, busybox is a minimal shell which is often statically linked to provide rescue shells. Now it's time to create the actual initrd file for the kernel to load. First create a directory for the files to go in:
@@ -1334,7 +1334,7 @@ Now emerge grub2 which provides excellent EFI boot support:
 
 [source,text]
 ----
-# emerge grub:2
+# emerge sys-boot/grub:2
 ----
 
 Finally the actual setup process:
@@ -1469,7 +1469,7 @@ Now to setup a standard user:
 
 [source,text]
 ----
-# useradd -m -G users,wheel,audio,video -s /bin/bash cwgem
+# useradd -m -G users,wheel,audio,video,cdrom -s /bin/bash cwgem
 # passwd cwgem
 New password: 
 Retype new password: 
@@ -1480,14 +1480,8 @@ passwd: password updated successfully
 * wheel - Allows for `su` and used for `sudo` access
 * audio - Allows for audio device access
 * video - Want this for the iSight access
+* cdrom - For cdrom access
 
 == Desktop Setup ==
 
-The XFCE desktop will be used, but there are a few customizations I make for my particular use cases. First off I adjusted `USE` and `CURL_SSL` in `/etc/portage/make.conf`:
-
-[source,text]
-----
-USE="gstreamer erlang ruby smp ffmpeg theora vpx vim-syntax cjk -sdl fuse xinerama alsa networkmanager vala emacs"
-
-CURL_SSL="openssl"
-----
+The XFCE desktop will be used, but there are a few customizations I make for my particular use cases.
