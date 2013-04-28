@@ -12,6 +12,8 @@ A work in progress guide for encrypted root (lvm/cryptosetup) MacBook Pro Retina
 * http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml[Gentoo AMD64 Handbook]
 * http://en.gentoo-wiki.com/wiki/Root_filesystem_over_LVM2,_DM-Crypt_and_RAID[Root filesystem over LVM2, DM-Crypt and RAID]
 * http://wiki.gentoo.org/wiki/Apple_Macbook_Pro_Retina[Apple Macbook Pro Retina]
+* http://wiki.gentoo.org/wiki/Xfce[Xfce]
+* http://www.gentoo.org/doc/en/xfce-config.xml[The Xfce Configuration Guide]
 
 Thank you to all the authors who worked on these guides and allowed me to consolidate the information into a guide format. 
 
@@ -1011,9 +1013,9 @@ Now to generate the locales:
 
 Now, this is an unstable system, and with changes to the profile new keywords have been added. This means the base system isn't quite up to date yet. So to get around this I'm going to do a bit of bootstrapping. The process will basically be:
 
-1. Rebuild packages pass 1 - This gives a gcc/glibc which produces optimized code
-2. Rebuild packages pass 2 - This builds gcc/glibc itself using the optimized code
-3. Rebuild packages step 3 - This rebuilds everything with the new gcc/glibc to be properly optimized
+1. Rebuild packages pass 1 - Build a gcc/glibc which produces optimized code
+2. Rebuild packages pass 2 - Using the optimized gcc/glibc rebuild gcc/glibc 
+3. Rebuild packages pass 3 - Now rebuild everything on the system again completely optimized gcc
 
 You don't really have to do this, I just like to be thorough.
 
@@ -1042,14 +1044,6 @@ If anything shows up at the bottom that looks unsolvable, best to ask on mailing
 # emerge -e world
 ----
 
-The kernel ebuild doesn't actually compile the kernel so:
-
-[source,text]
-----
-# cd /usr/src/linux
-# make clean && make -j8 && make modules_install && make install
-----
-
 === Rebuild packages pass 2 ===
 
 Another quick check:
@@ -1066,17 +1060,19 @@ Followed by another rebuild:
 # emerge -e world
 ----
 
-And another kernel compile:
+=== Rebuild packages pass 3 ===
+
+Now it's time to compile system again along with all the other packages we want. Recompiling all the packages... well just follow the instructions from the previous section. Now then on to the packages we really want.
+
+==== Kernel Recompile ====
+
+Now that gcc is properly optimized, do another kernel compile:
 
 [source,text]
 ----
 # cd /usr/src/linux
 # make clean && make -j8 && make modules_install && make install
 ----
-
-=== Rebuild packages pass 3 ===
-
-Now it's time to compile system again along with all the other packages we want. Recompiling system... well just follow the instructions from the previous section. Now then on to the packages we really want.
 
 ==== Wifi ====
 
