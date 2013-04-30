@@ -1989,14 +1989,7 @@ Then it can be installed accordingly:
 
 === File Sync ===
 
-Dropbox is binary an the ebuild takes care of PaX marking, but it does attempt to use a bundled librsync. I'm not a big fan of bundled libs because I'd rather keep them up to date and secure via the package manager. With that in mind I do this:
-
-[source,text]
-----
-# echo 'net-misc/dropbox -librsync-bundled' >> /etc/portage/package.use/dropbox
-----
-
-Now to emerge:
+Dropbox is binary an the ebuild takes care of PaX marking so it just needs to be emerged:
 
 [source,text]
 ----
