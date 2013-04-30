@@ -357,6 +357,9 @@ SYNC="rsync://rsync.us.gentoo.org/gentoo-portage"
 # synaptics is for the touchpad
 INPUT_DEVICES="evdev keyboard mouse synaptics"
 
+# Video cards for xorg to support
+VIDEO_CARDS="dummy fbdev glint intel nouveau nv v4l vesa virtualbox"
+
 # You'll want this so grub knows how to deal with the EFI partition
 # and setup a bootable system properly
 GRUB_PLATFORMS="efi-64"
@@ -559,7 +562,16 @@ File systems  --->
     [ ]   Btrfs with integrity check tool compiled in (DANGEROUS) (NEW)
 ----
 
-Note that in all of the filesystems `POSIX Access Control Lists` and `Security Labels` were selected where applicable. This allows `paxctl` to have a dedicated place for setting various attributes for objects that don't work well with the various enforcement features that PaX offers.
+Note that in all of the filesystems `POSIX Access Control Lists` and `Security Labels` were selected where applicable. This allows `paxctl` to have a dedicated place for setting various attributes for objects that don't work well with the various enforcement features that PaX offers. Also for those who wish to access MacOSX volumes (HFS+), enable the following:
+
+[source,text]
+----
+File systems  --->
+  [*] Miscellaneous filesystems  --->
+    <*>   Apple Extended HFS file system support
+----
+
+This is especially important for later iSight setup, as the original OSX firmware drivers will be needed to make it work properly.
 
 === LVM Support (with crypt) ===
 
@@ -693,6 +705,17 @@ Device Drivers  --->
     [*] BCMA Broadcom GBIT MAC COMMON core driver
     [*] BCMA GPIO driver
     [ ] BCMA debugging (NEW) 
+----
+
+Finally some changes to the basic wireless networking stack:
+
+[source,text]
+----
+[*] Networking support  --->
+  -*-   Wireless  ---> 
+    <*>   cfg80211 - wireless configuration API
+    [*]     cfg80211 wireless extensions compatibility
+    <M>   Generic IEEE 802.11 Networking Stack (mac80211)
 ----
 
 This is the last of what needs to be done for wireless to work properly in the kernel. 
@@ -899,7 +922,13 @@ The only module I really load is for wifi:
 # echo 'modules="b43"' >> /etc/conf.d/modules
 ----
 
-Everything else will get pulled in as part of the module dependency resolution process.
+Everything else will get pulled in as part of the module dependency resolution process. there's also an issue with QOS and probing that can make wireless spam `dmesg`. This can be adjusted by doing:
+
+[source,text]
+----
+# echo 'options b43 qos=0' > /etc/modprobe.d/b43.conf
+# echo “options mac80211 max_probe_tries=20″ > /etc/modprobe.d/mac80211.conf
+----
 
 == Basic Configuration ==
 
@@ -1009,6 +1038,23 @@ Now to generate the locales:
  * Generation complete
 ----
 
+Finally setting the system locale appropriately with `/etc/env.d/02locale`:
+
+[source,text]
+----
+# nano -w /etc/env.d/02locale
+
+LANG="en_US.UTF-8"
+LC COLLATE="C"
+----
+
+Now to make these changes stick:
+
+[source,text]
+----
+# env-update && source /etc/profile
+----
+
 == Unstable Bootstrap ==
 
 Now, this is an unstable system, and with changes to the profile new keywords have been added. This means the base system isn't quite up to date yet. So to get around this I'm going to do a bit of bootstrapping. The process will basically be:
@@ -1074,6 +1120,13 @@ Now that gcc is properly optimized, do another kernel compile:
 # make clean && make -j8 && make modules_install && make install
 ----
 
+A `.old` kernel will get left around by the install process, so it's a good idea to remove it so the grub automated configuration process later doesn't pick it up.
+
+[source,text]
+----
+# rm /boot/*.old
+----
+
 ==== Wifi ====
 
 There's two main packages needed for wifi to work properly. The first is the firmware that is loaded by the b43 module. First the Broadcom license needs to be accepted for the firmware to be installable. The license can be found here:
@@ -1094,12 +1147,25 @@ If you don't then you might want to try another broadcom driver, or get a thunde
 # emerge sys-firmware/b43-firmware
 ----
 
-Next is NetworkManager, which I've found to be by far the easiest to manage wireless connections, even on command line:
+Next is NetworkManager, which I've found to be by far the easiest to manage wireless connections, even on command line. First though `libproxy` will need to have the networkmanager USE flag disabled to avoid circular dependencies:
+
+[source,text]
+----
+# mkdir /etc/portage/package.use && echo 'net-libs/libproxy -networkmanager' >> /etc/portage/package.use/networkmanager
+----
 
 [source,text]
 ----
 # emerge net-misc/networkmanager
 # rc-update add NetworkManager default
+----
+
+Now that networkmanager has been built, libproxy can be rebuilt to support it properly:
+
+[source,text]
+----
+# rm /etc/portage/package.use/networkmanager
+# emerge net-libs/libproxy
 ----
 
 ==== Terminal Emulator ====
@@ -1120,11 +1186,11 @@ This makes sure the time sync is okay:
 # emerge net-misc/ntp
 ----
 
-Due to the fact that NetworkManager needs to authenticate against an access point, I generally start the service manually at connection:
+Now to add it at startup:
 
 [source,text]
 ----
-# /etc/init.d/ntpd start
+# rc-update add ntpd default
 ----
 
 ==== Syslog ====
@@ -1144,7 +1210,16 @@ For cron I use `cronie` which is different from the `vixie-cron` default. This i
 [source,text]
 ----
 # emerge sys-process/cronie
-# rc-udpate add cronie default
+# rc-update add cronie default
+----
+
+==== System Tracing ====
+
+`strace` and `lsof` are good for tracking down issues:
+
+[source,text]
+----
+# emerge sys-process/lsof dev-util/strace
 ----
 
 ==== File Indexing ====
@@ -1343,18 +1418,12 @@ Installation finished. No error reported.
 
 If something goes weird here, be sure that `/boot/efi` is mounted, and target is spelled properly. Should that fail it would be best to ask for advice on forums/IRC/mailing list. Finally the bootloader configuration needs to be generated, which `grub2-mkconfig` handles:
 
-[source,text]
-----
-# grub2-mkconfig -o /boot/efi/EFI/grub2/grub.cfg
-----
 
 [source,text]
 ----
 # grub2-mkconfig -o /boot/efi/EFI/grub2/grub.cfg
 Generating grub.cfg ...
 Found linux image: /boot/vmlinuz-3.8.8-hardened
-Found initrd image: /boot/initrd-3.8.8-hardened
-Found linux image: /boot/vmlinuz-3.8.8-hardened.old
 Found initrd image: /boot/initrd-3.8.8-hardened
 done
 ----
@@ -1480,4 +1549,723 @@ passwd: password updated successfully
 
 == Desktop Setup ==
 
-The XFCE desktop will be used, but there are a few customizations I make for my particular use cases.
+Before setting up the environment, the xorg server needs to be installed. This is done with:
+
+[source,text]
+----
+# emerge x11-base/xorg-server
+----
+
+The XFCE desktop will be used, but first off is setting up some of the xfce plugins in `/etc/portage/make.conf`:
+
+[source,text]
+----
+# nano -w /etc/portage/make.conf
+
+<snip>
+# XFCE Plugins
+XFCE_PLUGINS="brightness clock trash"
+----
+
+Now to pull in the core XFCE packages:
+
+[source,text]
+----
+# emerge xfce-extra/xfce4-notifyd xfce-base/xfce4-meta
+----
+
+Slim will act as a login manager. First `xdm` needs to be set to run at boot:
+
+[source,text]
+----
+# rc-update add xdm default
+----
+
+Now emerge slim:
+
+[source,text]
+----
+# emerge x11-misc/slim
+----
+
+Edit `/etc/conf.d/xdm` to set slim as the login manager:
+
+[source,text]
+----
+# nano -w /etc/conf.d/xdm
+
+# We always try and start X on a static VT. The various DMs normally default
+# to using VT7. If you wish to use the xdm init script, then you should ensure
+# that the VT checked is the same VT your DM wants to use. We do this check to
+# ensure that you haven't accidentally configured something to run on the VT
+# in your /etc/inittab file so that you don't get a dead keyboard.
+CHECKVT=7
+
+# What display manager do you use ?  [ xdm | gdm | kdm | gpe | entrance ]
+# NOTE: If this is set in /etc/rc.conf, that setting will override this one.
+DISPLAYMANAGER="slim"
+----
+
+Now to setup XFCE as the default session:
+
+[source,text]
+----
+# echo XSESSION=\"Xfce4\" > /etc/env.d/90xsession
+# env-update && source /etc/profile
+----
+
+Now a few basic XFCE related packages to improve the overall experience:
+
+=== Dual Monitor ===
+
+`xfce4-settings` since 4.11 has improved support for dual monitors, but does not exist in the portage tree yet. To get around this, we'll use the existing overlay to bump the package:
+
+[source,text]
+----
+# cd /usr/local/portage
+# echo 'xfce-base' > profiles/categories
+# mkdir xfce-base
+# cd xfce-base
+# cp -a /usr/portage/xfce-base/xfce4-settings .
+# cd xfce4-settings
+# mv xfce4-settings-4.10.0.ebuild xfce4-settings-4.11.0.ebuild
+# ebuild xfce4-settings-4.11.0.ebuild digest
+----
+
+Now to be safe, check the manifest against the http://mail.xfce.org/pipermail/xfce-announce/2012-October/000228.html[announce email]. This has to be done manually with `sha1sum` as the Manifest file uses stronger checksums then the email.
+
+[source,text]
+----
+# sha1sum /usr/portage/distfiles/xfce4-settings-4.11.0.tar.bz2 
+3f0ed30b2168732b27bfe7150edc5e1cbfdab06f  /usr/portage/distfiles/xfce4-settings-4.11.0.tar.bz2
+----
+
+This indeed matches the checksum in the email. So now time to emerge it:
+
+[source,text]
+----
+# emerge xfce4-settings
+----
+
+=== Application Finder ===
+
+The application finder is a tool to find and launch installed applications on your system and the quickly execute commands. It can be installed with:
+
+[source,text]
+----
+# emerge xfce-base/xfce4-appfinder
+----
+
+=== Application Launcher ===
+
+A nice addon for quick launcher functionality:
+
+[source,text]
+----
+# emerge xfce-base/xfce4-quicklauncher-plugin
+----
+
+=== Task Manager ===
+
+Provides a graphical task manager for managing processes:
+
+[source,text]
+----
+# emerge xfce-extra/xfce4-taskmanager
+----
+
+=== File Manager Integration ===
+
+Three main addons for `thunar`, the file manager:
+
+* xfce-extra/thunar-archive-plugin: lets you create and extract archive files using the right-click menu. It provides a handy front-end for graphical archiving applications such as xarchiver and file-roller
+* xfce-extra/tumbler: tumblerlets you preview certain types of files from within Thunar, such as images and fonts
+* xfce-extra/thunar-volman: automatically manages removable media and drives
+
+These can all be installed with:
+
+[source,text]
+----
+# emerge xfce-extra/thunar-archive-plugin xfce-extra/tumbler xfce-extra/thunar-volman
+----
+
+=== Network Manager ===
+
+There is a gnome network manager applet that can be used with XFCE. Install it with:
+
+[source,text]
+----
+# emerge gnome-extra/nm-applet
+----
+
+=== Terminal ===
+
+XFCE provides its own terminal that can be installed with:
+
+[source,text]
+----
+# emerge x11-terms/xfce4-terminal
+----
+
+=== Volume Related ===
+
+There are two packages here. The first is xfce4-volumed which allows for volume key binding. The other is xfce4-mixer for volume control:
+
+[source,text]
+----
+# emerge xfce-extra/xfce4-volumed xfce-extra/xfce4-mixer
+----
+
+=== Screenshots ===
+
+A nice app for taking screenshots:
+
+[source,text]
+----
+# emerge xfce-extra/xfce4-screenshooter
+----
+
+=== Themes ===
+
+XFCE has some nice gtk themes, and the standard gtk-engines and gnome-themes can be used as well (I recommend the later as they make GTK3 apps look nicer):
+
+[source,text]
+----
+# emerge x11-themes/gtk-engines-xfce x11-themes/gtk-engines x11-themes/gnome-themes-standard
+----
+
+=== Power Management ===
+
+xfce4-power-manager is a great all around package for handling power management in general. It deals with not only power usage profiles, but also gives a nice indicator of power level:
+
+[source,text]
+----
+# emerge xfce-extra/xfce4-power-manager
+----
+
+== Updates ==
+
+Now is a good time to reboot to verify the display manager comes up as usual:
+
+[source,text]
+----
+# reboot
+----
+
+If all goes well XFCE should come up and ask you about configuration. The default config will be fine for general cases. Now a few things have happened since emerging packages. First off the tree has gotten a bit out of date, and the other issue is config files need to be updated. First to update the portage tree:
+
+[source,text]
+----
+# eix-sync
+----
+
+I use `eix-sync` instead because it updates the `eix` database for faster package querying, and it also displays a list of updates at the end. Then to check for updates:
+
+[source,text]
+----
+# emerge -upv world
+These are the packages that would be merged, in order:
+
+Calculating dependencies... done!
+[ebuild     U  ] sys-boot/grub-2.00-r3:2 [2.00-r2:2] USE="nls truetype -custom-cflags -debug -device-mapper -doc -efiemu -libzfs -mount -sdl -static" GRUB_PLATFORMS="efi-64 -coreboot -efi-32 -emu -ieee1275 -multiboot -pc -qemu -qemu-mips -yeeloong" 0 kB
+
+Total: 1 package (1 upgrade), Size of downloads: 0 kB
+----
+
+There appears to be an update for grub so a quick emerge world update:
+
+[source,text]
+----
+# emerge -u world
+----
+
+Now it's time to update configuration files. This can be done with `etc-update`:
+
+[source,text]
+----
+# etc-update
+The following is the list of files which need updating, each
+configuration file is followed by a list of possible replacement files.
+1) /etc/hosts (1)
+2) /etc/issue (1)
+3) /etc/locale.gen (1)
+4) /etc/rc.conf (1)
+5) /etc/conf.d/hwclock (1)
+6) /etc/conf.d/modules (1)
+Please select a file to edit by entering the corresponding number.
+              (don't use -3, -5, -7 or -9 if you're unsure what to do)
+              (-1 to exit) (-3 to auto merge all files)
+                           (-5 to auto-merge AND not use 'mv -i')
+                           (-7 to discard all updates)
+                           (-9 to discard all updates AND not use 'rm -i'):
+----
+
+These are all from the rebuilding of packages and can be safely discarded by typing `-9` followed by enter, then `YES` followed by enter.
+
+== Workstation Applications ==
+
+Now for some workstation applications. For those that want a more detailed list, the http://wiki.xfce.org/recommendedapps[XFCE wiki has a recommended apps page]. However it's important to note that All the apps below have been tested against the hardened kernel as much as feasibly possible:
+
+=== Accessories ===
+
+==== Text Editor ====
+
+XFCE has a text editor called `leafpad`, but I tend to prefer `gedit` (and am actually typing this guide in it):
+
+[source,text]
+----
+For leafpad:
+# emerge app-editors/leafpad
+
+For gedit:
+# emerge app-editors/gedit app-editors/gedit-plugins
+----
+
+For AsciiDoc support in gedit, check out http://kenjiru.ro/blog/2011/10/asciidoc-highlight-for-gedit[this blog page].
+
+==== Calculator ====
+
+For calculators there is `x11-apps/xcalc` and `gnome-extra/gcalctool` for a basic calculator, and `sci-calculators/galculator` for something more feature rich:
+
+[source,text]
+----
+For xcalc
+# emerge x11-apps/xcalc
+
+For gcalctool
+# emerge gnome-extra/gcalctool
+
+For galculator
+# emerge sci-calculators/galculator
+----
+
+=== Graphics ===
+
+For graphics editing I go with `gimp`, and I also use `dia` for graphing purposes (flowcharts, etc):
+
+[source,text]
+----
+For gimp
+# emerge media-gfx/gimp
+
+For dia
+# emerge app-office/dia
+----
+
+=== Internet ===
+
+There's a lot here:
+
+* Chromium for browsing (Alternative: Chrome/Firefox)
+* Thunderbird for email (Alternative: Claws Mail)
+* Skype for VOIP calls (Alternative: Ekiga)
+* Dropbox for file sync (Alternative: Probably something S3 based)
+
+==== Browser ====
+
+Chromium will require some USE adjustments first:
+
+[source,text]
+----
+# nano -w /etc/portage/package.use/chromium
+
+>=dev-libs/libxml2-2.9.0-r2 icu
+=media-video/ffmpeg-1.0.6 opus
+=media-libs/mesa-9.1.1 gles2
+>=sys-libs/zlib-1.2.7 minizip
+----
+
+Now it can be emerged with:
+
+[source,text]
+----
+# emerge www-client/chromium
+----
+
+Chrome requires excepting the license first:
+
+[source,text]
+----
+# nano /usr/portage/licenses/google-chrome # Read the license!
+# echo 'www-client/google-chrome google-chrome' >> /etc/portage/package.license/chrome
+----
+
+Then it can be installed with:
+
+[source,text]
+----
+# emerge www-client/google-chrome
+----
+
+Firefox requires a USE flag adjustment:
+
+[source,text]
+----
+# echo '=dev-lang/python-2.7.3-r3 sqlite' >> /etc/portage/package.use/firefox
+# emerge www-client/firefox
+----
+
+There is also the `firefox-bin` package, but I do not recommend using it as it will not be compiled with the benefits of the hardened toolchain:
+
+[source,text]
+----
+# emerge www-client/firefox
+----
+
+==== Mail Client ====
+
+Thunderbird is a client I've used for quite awhile, so it's the default I go with. Claws Mail is a nice alternative for something a bit less resource intensive. 
+
+[source,text]
+----
+For Thunderbird
+# echo '=dev-lang/python-2.7.3-r3 sqlite' >> /etc/portage/package.use/thunderbird
+# emerge mail-client/thunderbird
+
+For Claws Mail
+# emerge mail-client/claws-mail
+----
+
+==== VOIP ====
+
+Skype is something of what I consider to be a necessary evil. It's a binary package so it doesn't get the hardened toolchain support, plus it is often the target of malware. However business use of it is quite popular, and I personally have to use it at work. Also remember the recommendation to enable extended attributes in various filesystems? This is one of the programs that needs it. Skype has a https://jira.skype.com/browse/SCL-616[binary protection system]. This system makes it so that `paxctl` can't override the standard application headers to allow certain operations that it normally protects against. However, Skype doesn't look at extended attributes, so PaX can utilize those instead. Due to this limitation, Skype is currently masked in the hardened profile. So first off unmask it:
+
+[source,text]
+----
+# mkdir /etc/portage/package.unmask && echo '=net-im/skype-4.1.0.20' >> /etc/portage/package.unmask/skype
+----
+
+[NOTE]
+I use a specific version atom here because there's a chance Skype could get masked for another reason
+
+Next there is a license agreement:
+
+[source,text]
+----
+# nano /usr/portage/licenses/skype-4.0.0.7-copyright
+# echo 'net-im/skype skype-4.0.0.7-copyright' > /etc/portage/package.license/skype
+----
+
+Now to install the package:
+
+[source,text]
+----
+# emerge skype
+----
+
+[NOTE]
+Skype is a 32 bit binary so it will pull in 32 bit libraries to support it
+
+The ebuild thankfully takes care of the header marking for us:
+
+[source,text]
+----
+# paxctl -v /opt/bin/skype
+PaX control v0.7
+Copyright 2004,2005,2006,2007,2009,2010,2011,2012 PaX Team <pageexec@freemail.hu>
+
+- PaX flags: -----m-x-e-- [/opt/bin/skype]
+        MPROTECT is disabled
+        RANDEXEC is disabled
+        EMUTRAMP is disabled
+----
+
+For Ekiga, a few USE flags need to be adjusted first:
+
+[source,text]
+----
+# nano -w /etc/portage/package.use/ekiga
+
+net-libs/opal sip sipim
+net-libs/ptlib wav
+----
+
+Then it can be installed accordingly:
+
+[source,text]
+----
+# emerge ekiga
+----
+
+=== File Sync ===
+
+Dropbox is binary an the ebuild takes care of PaX marking, but it does attempt to use a bundled librsync. I'm not a big fan of bundled libs because I'd rather keep them up to date and secure via the package manager. With that in mind I do this:
+
+[source,text]
+----
+# echo 'net-misc/dropbox -librsync-bundled' >> /etc/portage/package.use/dropbox
+----
+
+Now to emerge:
+
+[source,text]
+----
+# emerge dropbox
+----
+
+=== Office ===
+
+For general office I go with LibreOffice, as it supports quite a large number formats, especially Microsoft Office related ones:
+
+[source,text]
+----
+# emerge libreoffice
+----
+
+For PDF viewing purposes I use evince:
+
+[source,text]
+----
+# emerge app-text/evince
+----
+
+=== Development ===
+
+There's quite a lot in this section, as this workstation will be used for development purposes. One of the interesting issues with development in a hardened environment is dealing with JIT (Just In Time Compilation). JIT is present in quite a number of programming languages, and is used to http://en.wikipedia.org/wiki/Just-in-time_compilation[help with performance]. However due to its need to interact with memory in an executable fashion, it does not work with http://pax.grsecurity.net/docs/mprotect.txt[MPROTECT] PaX protections. Here are some resources on JIT in terms of security:
+
+* http://www.semantiscope.com/research/BHDC2010/[Interpreter Exploitation: Pointer Inference And JIT Spraying]
+* http://www.youtube.com/watch?v=fX0vIuxCS0sp[Blackhat 2011 - Attacking Client Side JIT Compiler]
+* http://wingolog.org/archives/2011/06/21/security-implications-of-jit-compilation[security implications of jit compilation]
+
+With this in mind, http://cwgem.github.io/security/balanced-security.html[security is about balance]. It is important to be careful about what code is trusted, and that is also why this guide http://www.macworld.com/article/2028740/apple-confirms-cyber-attack-will-release-security-tool.html[will not support Flash or Java browser plugins]. Now then on to the installation.
+
+==== Source Control ====
+
+First off are some nice source control packages. The four I usually install are mercurial, git, cvs, and subversion. USE customizations include a few security options and emacs support:
+
+[source,text]
+----
+# echo 'dev-vcs/mercurial emacs gpg' >> /etc/portage/package.use/mercurial
+# echo 'dev-vcs/subversion gnome-keyring' >> /etc/portage/package.use/subversion
+# echo 'dev-vcs/git emacs gnome-keyring highlight' >> /etc/portage/package.use/git
+----
+
+Then all that remains is the installation:
+
+[source,text]
+----
+# emerge dev-vcs/mercurial dev-vcs/subversion dev-vcs/git
+----
+
+==== IDE ====
+
+I work with Emacs as an IDE, generally using vim and nano for quick editing tasks. Emacs can be installed as follows:
+
+[source,text]
+----
+# emerge emacs
+----
+
+For clojure programming I use https://github.com/overtone/emacs-live[emacs live]. If you're starting out with emacs I recommend looking at the https://github.com/technomancy/emacs-starter-kit[emacs starter kit]. 
+
+==== Ruby ====
+
+Next is Ruby, for which I use RVM (being a maintainer and all). The nice thing about RVM is it lets Ruby run as a non-privileged user in the home directory. So first off the installation. By default Ruby 1.8 is the Gentoo system default, so it needs to be changed to something more recent:
+
+[source,text]
+----
+# eselect ruby set 2
+# source /etc/profile
+----
+
+Now for the actual installation. This will use the stable branch of RVM, and install Ruby 2.0.0. Autolibs is a newly added feature for dependency management. In this case, I prefer to manually install the packages if there are any missing, so I set this to 2. Setting this to 4 will let RVM do all the `emerge --sync` and installation for you, but will require sudo escalation (which is not quite available yet). So now as the *non root user* (either `su` to the user as root or login at a separate virtual console):
+
+[source,text]
+----
+$ \curl -L https://get.rvm.io | bash -s stable --ruby=2.0.0 --autolibs=2
+----
+
+Nothing should be required here (since most deps were brought in when Ruby was originally pulled in). If something doesn't show up then you might want to check the packages it warns about and install them accordingly. 
+
+==== Python ====
+
+As portage uses Python, it pretty much comes ready outside the box. However, there's a nice python package called http://docs.python-guide.org/en/latest/dev/virtualenvs.html[virtualenv] which helps create isolated python environments. It can be installed for both Python 2.7 and 3.2 with:
+
+[source,text]
+----
+# emerge dev-python/virtualenv
+----
+
+==== Erlang ====
+
+A few customizations here for erlang:
+
+[source,text]
+----
+# echo 'dev-lang/erlang hipe emacs' >> /etc/portage/package.use/erlang
+----
+
+This provides emacs support as well as hipe for native compilation. Now for the install:
+
+[source,text]
+----
+# emerge dev-lang/erlang
+----
+
+==== Java (Clojure) ====
+
+This is a bit more interesting and requires a bit of Java bootstrapping. OpenJDK (IcedTea) will be used here, without the browser and webstart plugins for previously mentioned security reasons. With that in mind:
+
+[source,text]
+----
+# nano -w /etc/portage/package.use/openjdk
+
+dev-java/icedtea -nsplugin -webstart
+dev-java/icedtea-bin -nsplugin
+----
+
+Now then for bootstrapping the ant build system:
+
+[source,text]
+----
+# emerge ant-core
+----
+
+This allows for the source version of OpenJDK to be compiled:
+
+[source,text]
+----
+# emerge icedtea
+----
+
+Now to switch to it as the system default JRE/JDK:
+
+[source,text]
+----
+# eselect java-vm set system 1
+# eselect java-vm list
+Available Java Virtual Machines:
+  [1]   icedtea-7  system-vm
+  [2]   icedtea-bin-7
+----
+
+From there Clojure can be installed:
+
+[source,text]
+----
+# emerge dev-lang/clojure
+----
+
+=== Multimedia ===
+
+Multimedia is for playing video and audio. First off is a media player, for which I use Pragha. First a few USE flag customizations: 
+
+[source,text]
+----
+# echo 'media-plugins/gst-plugins-meta http lame taglib v4l' >> /etc/portage/package.use/gstreamer
+----
+
+Then emerge:
+
+[source,text]
+----
+# emerge media-sound/pragha
+----
+
+For CD Burning I use brasero:
+
+[source,text]
+----
+# emerge app-cdr/brasero
+----
+
+Videos I use VLC, but a few customizations first:
+
+[source,text]
+----
+# echo 'media-video/vlc bluray fontconfig gnutls matroska sdl taglib v4l qt4' >> /etc/portage/package.use/vlc
+----
+
+[NOTE]
+qt4 USE flag is for having a GUI that functions properly
+
+Then just emerge:
+
+[source,text]
+----
+# emerge media-video/vlc
+----
+
+=== System ===
+
+I use ibus for text entry. It's a bit interesting getting it to work. First python 2.7 needs to be `paxctl`-ed:
+
+[source,text]
+----
+# paxctl -pm /usr/bin/python2.7
+----
+
+Then the all versions greater than `ibus-1.4.2` need to be masked at the moment, as the python/gtk interface causes a segmentation fault:
+
+[source,text]
+----
+# echo '>=app-i18n/ibus-1.4.99.20121006' >> /etc/portage/package.mask/ibus
+----
+
+Then just emerge:
+
+[source,text]
+----
+# emerge app-i18n/ibus
+----
+
+In order to use ibus, 
+
+For Japanese input in particular, I use `mozc` which is based off GoogleIME:
+
+[source,text]
+----
+# emerge app-i18n/mozc
+----
+
+== Desktop Setup ==
+
+=== Japanese Fonts ===
+
+The standard Japanese fonts are pretty awful, so I emerge some good ones:
+
+[source,text]
+----
+# emerge media-fonts/ja-ipafonts
+# eselect fontconfig enable 39
+----
+
+=== Startup Applications ===
+
+First for the desktop setup, a few things need to be adjusted. First for ibus to work, it needs to be setup to start with XFCE. Click on the `Applications Menu` on the upper left, then navigate to the `Settings -> Settings Manager` submenu:
+
+image:/images/settings-menu.png[A picture showing the location of the Settings Manager]
+
+Next click on the `Session and Startup` section:
+
+image:/images/session-startup.png[A picture showing the location of the Session and Startup page]
+
+Finally go to the `Application Autostart` tab:
+
+image:/images/startup-applications.png[A picture showing the location of the Application Autostart tab]
+
+Clicking on the `+` button at the bottom will bring in a dialog. I name it `Ibus Setup Script` with the description `Setup ibus environment variables and start ibus daemon`. Then I point it to an `ibus.sh` file in my home directory with the contents:
+
+[source,text]
+----
+#!/bin/bash
+
+export XMODIFIERS="@im=ibus"
+export GTK_IM_MODULE="ibus"
+export QT_IM_MODULE="xim"
+ibus-daemon -d -x
+----
+
+Also as the second screenshot notes, `GPG Password Agent`, `SSH Key Agent`, `Secret Storage Service` should be enabled to gnome keyring integration.
+
+=== Theme ===
+
+Now returning to the setting script, click on the `Appearance` section:
+
+image:/images/appearance.png[A picture showing the location of the Appearance section of the Settings Manager]
+
+This will bring up a list of styles to use. Scroll through them and until you find one that's suitable. I ended up going with the `Clearlooks` them.
+
+=== Desktop Refresh ===
+
+Now that ibus is setup, the desktop manager will need to be restarted for changes to take affect. Logging out through `Logout` in the `Applications Menu` will do just that. XFCE will thankfully re-open any programs that were up before logout.
